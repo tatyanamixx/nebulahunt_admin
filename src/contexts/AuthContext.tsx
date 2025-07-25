@@ -1,23 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { api } from '../lib/api';
 
-// Типы для Telegram WebApp
+// Типы для Google OAuth
 declare global {
 	interface Window {
-		Telegram: {
-			WebApp: {
-				initData: string;
-				initDataUnsafe: {
-					user?: {
-						id: number;
-						username: string;
-						first_name: string;
-						last_name?: string;
-					};
+		google: {
+			accounts: {
+				oauth2: {
+					initTokenClient: (config: any) => any;
 				};
-				ready: () => void;
-				expand: () => void;
-				close: () => void;
 			};
 		};
 	}
@@ -25,15 +16,23 @@ declare global {
 
 interface User {
 	id: number;
-	username: string;
+	email?: string;
+	username?: string;
+	firstName?: string;
+	lastName?: string;
 	role: string;
+	provider: 'google';
+	providerId: string;
 }
 
 interface AuthContextType {
 	user: User | null;
 	isAuthenticated: boolean;
-	login: (initData: string) => Promise<void>;
+	// OAuth методы
+	loginWithGoogle: () => Promise<void>;
+	// 2FA методы
 	verify2FA: (otp: string) => Promise<void>;
+	// Общие методы
 	logout: () => void;
 	loading: boolean;
 }
@@ -44,18 +43,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	const [user, setUser] = useState<User | null>(null);
 	const [loading, setLoading] = useState(true);
 
+	// Проверяем существующую сессию при загрузке
 	useEffect(() => {
 		const token = localStorage.getItem('accessToken');
 		if (token) {
-			// Простая проверка токена (в реальном приложении лучше использовать jwt-decode)
 			try {
 				const payload = JSON.parse(atob(token.split('.')[1]));
+				console.log('Token payload:', payload);
 				setUser({
 					id: payload.id,
+					email: payload.email,
 					username: payload.username,
+					firstName: payload.firstName,
+					lastName: payload.lastName,
 					role: payload.role,
+					provider: payload.provider,
+					providerId: payload.providerId,
 				});
 			} catch (error) {
+				console.error('Token parsing error:', error);
 				localStorage.removeItem('accessToken');
 				localStorage.removeItem('refreshToken');
 			}
@@ -63,35 +69,101 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		setLoading(false);
 	}, []);
 
-	const login = async (initData: string) => {
+	// Google OAuth логин
+	const loginWithGoogle = async () => {
 		try {
-			const response = await api.post(
-				'/admin/login',
-				{},
-				{
-					headers: {
-						'x-telegram-init-data': initData,
-					},
-				}
-			);
+			if (!window.google?.accounts?.oauth2) {
+				throw new Error('Google OAuth not available');
+			}
 
-			const { accessToken, refreshToken, ...userData } = response.data;
-			localStorage.setItem('accessToken', accessToken);
-			localStorage.setItem('refreshToken', refreshToken);
-			setUser(userData);
+			const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+			if (!clientId || clientId === 'your_google_client_id_here') {
+				throw new Error(
+					'Google OAuth Client ID not configured. Please set VITE_GOOGLE_CLIENT_ID in your .env.local file'
+				);
+			}
+
+			const client = window.google.accounts.oauth2.initTokenClient({
+				client_id: clientId,
+				scope: 'email profile',
+				callback: async (response: any) => {
+					if (response.error) {
+						throw new Error(
+							`Google OAuth error: ${response.error}`
+						);
+					}
+
+					// Отправляем токен на сервер для верификации
+					const serverResponse = await api.post(
+						'/admin/oauth/google',
+						{
+							accessToken: response.access_token,
+						}
+					);
+
+					console.log(
+						'Google OAuth server response:',
+						serverResponse.data
+					);
+
+					// Если требуется 2FA, сохраняем временные данные
+					if (serverResponse.data.requires2FA) {
+						localStorage.setItem(
+							'tempOAuthData',
+							JSON.stringify({
+								provider: 'google',
+								accessToken: response.access_token,
+								userData: serverResponse.data.userData,
+							})
+						);
+						// Здесь можно показать 2FA форму
+						return;
+					}
+
+					// Если 2FA не требуется, сразу авторизуем
+					const { accessToken, refreshToken, ...userData } =
+						serverResponse.data;
+					localStorage.setItem('accessToken', accessToken);
+					localStorage.setItem('refreshToken', refreshToken);
+					setUser(userData);
+				},
+			});
+
+			client.requestAccessToken();
 		} catch (error) {
+			console.error('Google OAuth error:', error);
 			throw error;
 		}
 	};
 
+	// 2FA верификация
 	const verify2FA = async (otp: string) => {
 		try {
-			const response = await api.post('/admin/2fa/verify', { otp });
+			const tempData = localStorage.getItem('tempOAuthData');
+			if (!tempData) {
+				throw new Error('No temporary OAuth data found');
+			}
+
+			const { provider, ...oauthData } = JSON.parse(tempData);
+
+			const response = await api.post('/admin/oauth/2fa/verify', {
+				provider,
+				otp,
+				...oauthData,
+			});
+
+			console.log('2FA verification response:', response.data);
+
+			// Очищаем временные данные
+			localStorage.removeItem('tempOAuthData');
+
+			// Сохраняем токены и устанавливаем пользователя
 			const { accessToken, refreshToken, ...userData } = response.data;
 			localStorage.setItem('accessToken', accessToken);
 			localStorage.setItem('refreshToken', refreshToken);
 			setUser(userData);
 		} catch (error) {
+			console.error('2FA verification error:', error);
 			throw error;
 		}
 	};
@@ -99,13 +171,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	const logout = () => {
 		localStorage.removeItem('accessToken');
 		localStorage.removeItem('refreshToken');
+		localStorage.removeItem('tempOAuthData');
 		setUser(null);
 	};
 
 	const value = {
 		user,
 		isAuthenticated: !!user,
-		login,
+		loginWithGoogle,
 		verify2FA,
 		logout,
 		loading,

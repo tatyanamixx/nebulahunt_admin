@@ -1,7 +1,18 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../lib/api';
-import { Users, Star, Gem, TrendingUp, Activity, Loader2 } from 'lucide-react';
+import { isDevelopment } from '../lib/env';
+import {
+	Users,
+	Star,
+	Gem,
+	TrendingUp,
+	Activity,
+	Loader2,
+	UserPlus,
+} from 'lucide-react';
 import { formatNumber } from '../lib/utils';
+import InviteInfo from '../components/InviteInfo';
 
 interface DashboardStats {
 	totalUsers: number;
@@ -21,8 +32,19 @@ export default function Dashboard() {
 			try {
 				const response = await api.get('/admin/stats');
 				setStats(response.data);
-			} catch (error) {
+			} catch (error: any) {
 				console.error('Error fetching stats:', error);
+				// Показываем сообщение об ошибке вместо тестовых данных
+				// if (isDevelopment()) {
+				// 	setStats({
+				// 		totalUsers: 1250,
+				// 		activeUsers: 847,
+				// 		totalStardust: 15420,
+				// 		totalDarkMatter: 1250,
+				// 		totalGalaxies: 89,
+				// 		totalArtifacts: 234,
+				// 	});
+				// }
 			} finally {
 				setLoading(false);
 			}
@@ -124,7 +146,9 @@ export default function Dashboard() {
 						Быстрые действия
 					</h3>
 					<div className='mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3'>
-						<button className='relative group bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-primary-500 rounded-lg border border-gray-200 hover:border-gray-300'>
+						<Link
+							to='/users'
+							className='relative group bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-primary-500 rounded-lg border border-gray-200 hover:border-gray-300'>
 							<div>
 								<span className='rounded-lg inline-flex p-3 bg-primary-50 text-primary-700 ring-4 ring-white'>
 									<Users className='h-6 w-6' />
@@ -143,7 +167,29 @@ export default function Dashboard() {
 									пользователями системы
 								</p>
 							</div>
-						</button>
+						</Link>
+
+						<Link
+							to='/admin/invite'
+							className='relative group bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-primary-500 rounded-lg border border-gray-200 hover:border-gray-300'>
+							<div>
+								<span className='rounded-lg inline-flex p-3 bg-green-50 text-green-700 ring-4 ring-white'>
+									<UserPlus className='h-6 w-6' />
+								</span>
+							</div>
+							<div className='mt-8'>
+								<h3 className='text-lg font-medium'>
+									<span
+										className='absolute inset-0'
+										aria-hidden='true'
+									/>
+									Пригласить администратора
+								</h3>
+								<p className='mt-2 text-sm text-gray-500'>
+									Отправить приглашение новому администратору
+								</p>
+							</div>
+						</Link>
 
 						<button className='relative group bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-primary-500 rounded-lg border border-gray-200 hover:border-gray-300'>
 							<div>
@@ -186,6 +232,11 @@ export default function Dashboard() {
 						</button>
 					</div>
 				</div>
+			</div>
+
+			{/* Секция приглашений */}
+			<div className='mt-8'>
+				<InviteInfo />
 			</div>
 		</div>
 	);

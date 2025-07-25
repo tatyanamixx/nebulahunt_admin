@@ -26,13 +26,20 @@ export const env = {
 	// Мок API
 	ENABLE_MOCK_API: import.meta.env.VITE_ENABLE_MOCK_API === 'true',
 
-	// Telegram настройки
-	BOT_TOKEN: import.meta.env.VITE_BOT_TOKEN,
+	// Email настройки
+	SMTP_HOST: import.meta.env.VITE_SMTP_HOST,
+	SMTP_PORT: import.meta.env.VITE_SMTP_PORT,
+	SMTP_USER: import.meta.env.VITE_SMTP_USER,
+	SMTP_PASS: import.meta.env.VITE_SMTP_PASS,
+
+	// App настройки
 	APP_NAME: import.meta.env.VITE_APP_NAME || 'Nebulahunt Admin',
+	APP_URL: import.meta.env.VITE_APP_URL || 'http://localhost:3000',
 
 	// Функциональность
 	ENABLE_2FA: import.meta.env.VITE_ENABLE_2FA !== 'false', // по умолчанию включено
-	ENABLE_TELEGRAM_AUTH: import.meta.env.VITE_ENABLE_TELEGRAM_AUTH !== 'false', // по умолчанию включено
+	ENABLE_EMAIL_INVITES: import.meta.env.VITE_ENABLE_EMAIL_INVITES !== 'false', // по умолчанию включено
+	ENABLE_GOOGLE_AUTH: import.meta.env.VITE_ENABLE_GOOGLE_AUTH !== 'false', // по умолчанию включено
 };
 
 console.log('🔍 Debug: env object created:', env);
@@ -49,10 +56,10 @@ console.log('🔍 Debug: isDevelopment:', isDevelopment());
 export const isMockApiEnabled = () => env.DEV_MODE && env.ENABLE_MOCK_API;
 
 /**
- * Проверяет, доступен ли Telegram WebApp
+ * Проверяет, доступна ли поддержка email
  */
-export const isTelegramWebApp = () => {
-	return typeof window !== 'undefined' && !window.Telegram?.WebApp;
+export const isEmailSupported = () => {
+	return env.ENABLE_EMAIL_INVITES && env.SMTP_HOST && env.SMTP_USER;
 };
 
 /**
@@ -64,8 +71,8 @@ export const canUseApp = () => {
 		return true;
 	}
 
-	// В продакшене только через Telegram WebApp
-	return isTelegramWebApp();
+	// В продакшене проверяем поддержку email
+	return isEmailSupported();
 };
 
 /**
@@ -75,11 +82,12 @@ export const getEnvironmentInfo = () => {
 	return {
 		devMode: env.DEV_MODE,
 		mockApi: env.ENABLE_MOCK_API,
-		telegramWebApp: isTelegramWebApp(),
+		emailSupported: isEmailSupported(),
 		canUseApp: canUseApp(),
 		apiUrl: env.API_URL,
 		enable2FA: env.ENABLE_2FA,
-		enableTelegramAuth: env.ENABLE_TELEGRAM_AUTH,
+		enableEmailInvites: env.ENABLE_EMAIL_INVITES,
+		enableGoogleAuth: env.ENABLE_GOOGLE_AUTH,
 	};
 };
 

@@ -1,6 +1,10 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Login from './pages/Login';
+import AdminLogin from './pages/AdminLogin';
+import AdminInit from './pages/AdminInit';
+import AdminInvite from './pages/AdminInvite';
+import AdminRegister from './pages/AdminRegister';
 import Settings from './pages/Settings';
 import Dashboard from './pages/Dashboard';
 import Users from './pages/Users';
@@ -20,6 +24,10 @@ function AppRoutes() {
 	return (
 		<Routes>
 			<Route path='/login' element={<Login />} />
+			<Route path='/admin/login' element={<AdminLogin />} />
+			<Route path='/admin/init' element={<AdminInit />} />
+			<Route path='/admin/invite' element={<AdminInvite />} />
+			<Route path='/admin/register' element={<AdminRegister />} />
 
 			<Route
 				element={

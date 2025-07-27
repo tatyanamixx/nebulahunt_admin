@@ -6,6 +6,7 @@ import AdminInit from './pages/AdminInit';
 import AdminInvite from './pages/AdminInvite';
 import AdminRegister from './pages/AdminRegister';
 import AdminSettings from './pages/AdminSettings';
+import AdminSettingsWithTabs from './pages/AdminSettingsWithTabs';
 import Settings from './pages/Settings';
 import Dashboard from './pages/Dashboard';
 import Users from './pages/Users';
@@ -59,6 +60,10 @@ function AppRoutes() {
 				<Route path='/users' element={<Users />} />
 				<Route path='/settings' element={<Settings />} />
 				<Route path='/admin-settings' element={<AdminSettings />} />
+				<Route
+					path='/admin-settings-tabs'
+					element={<AdminSettingsWithTabs />}
+				/>
 				<Route path='/token-info' element={<TokenInfo />} />
 			</Route>
 

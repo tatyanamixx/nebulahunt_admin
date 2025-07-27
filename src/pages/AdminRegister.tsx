@@ -28,6 +28,8 @@ export default function AdminRegister() {
 	const [qrCode, setQrCode] = useState('');
 	const [google2faSecret, setGoogle2faSecret] = useState('');
 	const [inviteToken, setInviteToken] = useState('');
+	const [showPassword, setShowPassword] = useState(false);
+	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
 	// Get invitation token from URL
 	useEffect(() => {
@@ -81,19 +83,19 @@ export default function AdminRegister() {
 		const minLength = 8;
 
 		if (password.length < minLength) {
-			return `Пароль должен содержать минимум ${minLength} символов`;
+			return `Password must contain at least ${minLength} characters`;
 		}
 
 		if (!/\d/.test(password)) {
-			return 'Пароль должен содержать хотя бы одну цифру';
+			return 'Password must contain at least one number';
 		}
 
 		if (!/[a-zA-Z]/.test(password)) {
-			return 'Пароль должен содержать хотя бы одну букву';
+			return 'Password must contain at least one letter';
 		}
 
 		if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-			return 'Пароль должен содержать хотя бы один специальный символ';
+			return 'Password must contain at least one special character';
 		}
 
 		return null;
@@ -103,12 +105,12 @@ export default function AdminRegister() {
 		e.preventDefault();
 
 		if (!formData.email || !formData.password || !formData.name) {
-			showMessage('Заполните все обязательные поля', true);
+			showMessage('Please fill in all required fields', true);
 			return;
 		}
 
 		if (formData.password !== formData.confirmPassword) {
-			showMessage('Пароли не совпадают', true);
+			showMessage('Passwords do not match', true);
 			return;
 		}
 
@@ -131,7 +133,7 @@ export default function AdminRegister() {
 			setGoogle2faSecret(google2faSecret);
 			setQrCode(otpAuthUrl);
 			setStep('2fa');
-			showMessage('Регистрация успешна! Настройте Google Authenticator');
+			showMessage('Registration successful! Set up Google Authenticator');
 		} catch (error: any) {
 			const message =
 				error.response?.data?.message || 'Registration error';
@@ -145,7 +147,7 @@ export default function AdminRegister() {
 		e.preventDefault();
 
 		if (!formData.otp) {
-			showMessage('Enter 2FA code', true);
+			showMessage('Please enter 2FA code', true);
 			return;
 		}
 
@@ -157,9 +159,7 @@ export default function AdminRegister() {
 				inviteToken,
 			});
 
-			showMessage(
-				'Регистрация завершена! Перенаправление на страницу входа...'
-			);
+			showMessage('Registration completed! Redirecting to login page...');
 			setTimeout(() => navigate('/admin/login'), 2000);
 		} catch (error: any) {
 			const message =
@@ -180,15 +180,15 @@ export default function AdminRegister() {
 				<div className='max-w-md w-full text-center'>
 					<div className='mx-auto h-12 w-12 text-red-400'>❌</div>
 					<h2 className='mt-6 text-2xl font-bold text-white'>
-						Недействительная ссылка
+						Invalid Link
 					</h2>
 					<p className='mt-2 text-sm text-gray-400'>
-						Для регистрации требуется действующее приглашение
+						A valid invitation is required for registration
 					</p>
 					<button
 						onClick={() => navigate('/admin/login')}
 						className='mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700'>
-						Перейти к входу
+						Go to Login
 					</button>
 				</div>
 			</div>
@@ -204,13 +204,13 @@ export default function AdminRegister() {
 					</div>
 					<h2 className='mt-6 text-3xl font-bold text-white'>
 						{step === 'register'
-							? 'Регистрация администратора'
-							: 'Настройка 2FA'}
+							? 'Admin Registration'
+							: '2FA Setup'}
 					</h2>
 					<p className='mt-2 text-sm text-gray-400'>
 						{step === 'register'
-							? 'Завершите регистрацию администратора'
-							: 'Настройте Google Authenticator для завершения регистрации'}
+							? 'Complete admin registration'
+							: 'Set up Google Authenticator to complete registration'}
 					</p>
 					{isDevelopment() && (
 						<div className='mt-4 p-3 bg-yellow-900 border border-yellow-700 rounded-md'>
@@ -240,7 +240,7 @@ export default function AdminRegister() {
 							<label
 								htmlFor='name'
 								className='block text-sm font-medium text-gray-300'>
-								Имя *
+								Name *
 							</label>
 							<input
 								id='name'
@@ -282,48 +282,74 @@ export default function AdminRegister() {
 							<label
 								htmlFor='password'
 								className='block text-sm font-medium text-gray-300'>
-								Пароль *
+								Password *
 							</label>
-							<input
-								id='password'
-								name='password'
-								type='password'
-								autoComplete='new-password'
-								required
-								value={formData.password}
-								onChange={(e) =>
-									handleInputChange(
-										'password',
-										e.target.value
-									)
-								}
-								className='mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-600 bg-gray-700 placeholder-gray-400 text-white rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm'
-								placeholder='Минимум 8 символов'
-							/>
+							<div className='mt-1 relative'>
+								<input
+									id='password'
+									name='password'
+									type={showPassword ? 'text' : 'password'}
+									autoComplete='new-password'
+									required
+									value={formData.password}
+									onChange={(e) =>
+										handleInputChange(
+											'password',
+											e.target.value
+										)
+									}
+									className='appearance-none relative block w-full px-3 py-2 pr-10 border border-gray-600 bg-gray-700 placeholder-gray-400 text-white rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm'
+									placeholder='Minimum 8 characters'
+								/>
+								<button
+									type='button'
+									onClick={() =>
+										setShowPassword(!showPassword)
+									}
+									className='absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-300'>
+									{showPassword ? '👁️' : '👁️‍🗨️'}
+								</button>
+							</div>
 						</div>
 
 						<div>
 							<label
 								htmlFor='confirmPassword'
 								className='block text-sm font-medium text-gray-300'>
-								Подтвердите пароль *
+								Confirm Password *
 							</label>
-							<input
-								id='confirmPassword'
-								name='confirmPassword'
-								type='password'
-								autoComplete='new-password'
-								required
-								value={formData.confirmPassword}
-								onChange={(e) =>
-									handleInputChange(
-										'confirmPassword',
-										e.target.value
-									)
-								}
-								className='mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-600 bg-gray-700 placeholder-gray-400 text-white rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm'
-								placeholder='Повторите пароль'
-							/>
+							<div className='mt-1 relative'>
+								<input
+									id='confirmPassword'
+									name='confirmPassword'
+									type={
+										showConfirmPassword
+											? 'text'
+											: 'password'
+									}
+									autoComplete='new-password'
+									required
+									value={formData.confirmPassword}
+									onChange={(e) =>
+										handleInputChange(
+											'confirmPassword',
+											e.target.value
+										)
+									}
+									className='appearance-none relative block w-full px-3 py-2 pr-10 border border-gray-600 bg-gray-700 placeholder-gray-400 text-white rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm'
+									placeholder='Repeat password'
+								/>
+								<button
+									type='button'
+									onClick={() =>
+										setShowConfirmPassword(
+											!showConfirmPassword
+										)
+									}
+									className='absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-300'>
+									{showConfirmPassword ? '👁️' : '👁️‍🗨️'}
+								</button>
+							</div>
 						</div>
 
 						<button
@@ -335,7 +361,7 @@ export default function AdminRegister() {
 							{loading ? (
 								<div className='h-5 w-5 animate-spin border-2 border-white border-t-transparent rounded-full' />
 							) : (
-								'Зарегистрироваться'
+								'Register'
 							)}
 						</button>
 					</form>
@@ -345,13 +371,13 @@ export default function AdminRegister() {
 					<div className='space-y-6'>
 						<div className='bg-gray-800 p-6 rounded-lg border border-gray-700'>
 							<h3 className='text-lg font-medium text-white mb-4'>
-								Настройка Google Authenticator
+								Google Authenticator Setup
 							</h3>
 
 							<div className='space-y-4'>
 								<div>
 									<label className='block text-sm font-medium text-gray-300 mb-2'>
-										QR-код для сканирования:
+										QR Code for scanning:
 									</label>
 									<div className='flex justify-center'>
 										<img
@@ -366,7 +392,7 @@ export default function AdminRegister() {
 
 								<div>
 									<label className='block text-sm font-medium text-gray-300 mb-2'>
-										Секрет для ручного ввода:
+										Secret for manual entry:
 									</label>
 									<div className='flex items-center space-x-2'>
 										<input
@@ -384,28 +410,25 @@ export default function AdminRegister() {
 											}
 											className='px-3 py-2 text-sm border border-gray-600 bg-gray-700 text-gray-300 rounded-md hover:bg-gray-600'
 											aria-label='Copy secret to clipboard'>
-											Копировать
+											Copy
 										</button>
 									</div>
 								</div>
 
 								<div className='bg-blue-900 p-4 rounded-md border border-blue-700'>
 									<h4 className='text-sm font-medium text-blue-200 mb-2'>
-										Инструкции:
+										Instructions:
 									</h4>
 									<ol className='text-sm text-blue-300 space-y-1'>
+										<li>1. Open Google Authenticator</li>
+										<li>2. Tap "+" to add account</li>
 										<li>
-											1. Откройте Google Authenticator
+											3. Choose "Scan QR code" or enter
+											secret manually
 										</li>
 										<li>
-											2. Нажмите "+" для добавления
-											аккаунта
+											4. Enter the received code below
 										</li>
-										<li>
-											3. Выберите "Сканировать QR-код" или
-											введите секрет вручную
-										</li>
-										<li>4. Введите полученный код ниже</li>
 									</ol>
 								</div>
 							</div>
@@ -418,7 +441,7 @@ export default function AdminRegister() {
 								<label
 									htmlFor='otp'
 									className='block text-sm font-medium text-gray-300'>
-									Код 2FA *
+									2FA Code *
 								</label>
 								<input
 									id='otp'
@@ -446,7 +469,7 @@ export default function AdminRegister() {
 									type='button'
 									onClick={() => setStep('register')}
 									className='flex-1 py-2 px-4 border border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-300 bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-gray-900'>
-									Назад
+									Back
 								</button>
 								<button
 									type='submit'
@@ -459,7 +482,7 @@ export default function AdminRegister() {
 									{loading ? (
 										<div className='h-5 w-5 animate-spin border-2 border-white border-t-transparent rounded-full mx-auto' />
 									) : (
-										'Завершить регистрацию'
+										'Complete Registration'
 									)}
 								</button>
 							</div>

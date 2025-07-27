@@ -104,7 +104,14 @@ export default function InviteInfo() {
 	};
 
 	const formatDate = (dateString: string) => {
-		return new Date(dateString).toLocaleDateString('en-US', {
+		if (!dateString) {
+			return 'N/A';
+		}
+		const date = new Date(dateString);
+		if (isNaN(date.getTime())) {
+			return 'Invalid Date';
+		}
+		return date.toLocaleDateString('en-US', {
 			year: 'numeric',
 			month: 'short',
 			day: 'numeric',
@@ -113,8 +120,7 @@ export default function InviteInfo() {
 		});
 	};
 
-	// Временно отключаем компонент для тестирования
-	return null;
+	// Компонент включен для отображения приглашений
 
 	if (loading) {
 		return (

@@ -1311,6 +1311,29 @@ export default function AdminSettings() {
 											<p className='text-gray-500 text-xs'>
 												Role: {invite.role}
 											</p>
+											<p
+												className={`text-xs ${
+													invite.expiresAt &&
+													new Date(invite.expiresAt) <
+														new Date()
+														? 'text-red-400'
+														: 'text-gray-500'
+												}`}>
+												Expires:{' '}
+												{invite.expiresAt
+													? (() => {
+															const date =
+																new Date(
+																	invite.expiresAt
+																);
+															return isNaN(
+																date.getTime()
+															)
+																? 'Invalid Date'
+																: date.toLocaleString();
+													  })()
+													: 'N/A'}
+											</p>
 										</div>
 										<div className='text-right'>
 											<span
@@ -1325,9 +1348,15 @@ export default function AdminSettings() {
 												{invite.status}
 											</span>
 											<p className='text-gray-500 text-xs mt-1'>
-												{new Date(
-													invite.createdAt
-												).toLocaleDateString()}
+												Created:{' '}
+												{(() => {
+													const date = new Date(
+														invite.createdAt
+													);
+													return isNaN(date.getTime())
+														? 'Invalid Date'
+														: date.toLocaleDateString();
+												})()}
 											</p>
 										</div>
 									</div>

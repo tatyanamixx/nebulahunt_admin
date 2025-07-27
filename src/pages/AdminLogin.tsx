@@ -13,7 +13,7 @@ export default function AdminLogin() {
 		loading,
 		isAuthenticated,
 	} = useAuth();
-	const [step, setStep] = useState<'oauth' | '2fa'>('oauth');
+	const [step, setStep] = useState<'oauth' | '2fa' | 'password2fa'>('oauth');
 
 	// Debug authentication state on component mount
 	useEffect(() => {
@@ -45,9 +45,13 @@ export default function AdminLogin() {
 			showMessage('Please complete Google OAuth first', true);
 		}
 	}, [isAuthenticated, navigate, step]);
+
 	const [otp, setOtp] = useState('');
 	const [message, setMessage] = useState('');
 	const [isLoading, setIsLoading] = useState(false);
+	const [qrCode, setQrCode] = useState('');
+	const [google2faSecret, setGoogle2faSecret] = useState('');
+	const [showQRCode, setShowQRCode] = useState(false);
 
 	// State for email/password form
 	const [email, setEmail] = useState('');
@@ -92,6 +96,26 @@ export default function AdminLogin() {
 			await loginWithGoogle();
 			// If loginWithGoogle didn't throw an error, 2FA is required
 			setStep('2fa');
+
+			// Get QR code for 2FA
+			try {
+				const tempData = localStorage.getItem('tempOAuthData');
+				if (tempData) {
+					const { userData } = JSON.parse(tempData);
+					const response = await fetch(
+						`/api/admin/2fa/qr/${userData.email}`
+					);
+					if (response.ok) {
+						const qrData = await response.json();
+						setQrCode(qrData.otpAuthUrl);
+						setGoogle2faSecret(qrData.google2faSecret);
+						setShowQRCode(true);
+					}
+				}
+			} catch (qrError) {
+				console.error('Failed to get QR code:', qrError);
+			}
+
 			showMessage(
 				'Google authentication successful. Please enter 2FA code'
 			);
@@ -183,6 +207,21 @@ export default function AdminLogin() {
 				throw new Error(data.message || 'Login error');
 			}
 
+			// Проверяем, требуется ли 2FA
+			if (data.requires2FA) {
+				console.log('🔐 2FA required for password login');
+				// Сохраняем данные пользователя для 2FA
+				localStorage.setItem(
+					'tempPasswordData',
+					JSON.stringify({
+						email: data.userData.email,
+						provider: 'password',
+					})
+				);
+				setStep('password2fa');
+				return;
+			}
+
 			// Сохраняем токены
 			localStorage.setItem('accessToken', data.accessToken);
 			localStorage.setItem('refreshToken', data.refreshToken);
@@ -205,6 +244,64 @@ export default function AdminLogin() {
 		} finally {
 			console.log('🔐 Завершение handlePasswordLogin');
 			setPasswordLoading(false);
+		}
+	};
+
+	const handlePassword2FAVerification = async (e: React.FormEvent) => {
+		e.preventDefault();
+
+		if (!otp || otp.length !== 6) {
+			showMessage('Please enter a valid 6-digit 2FA code', true);
+			return;
+		}
+
+		setIsLoading(true);
+		try {
+			const tempPasswordData = localStorage.getItem('tempPasswordData');
+			if (!tempPasswordData) {
+				throw new Error('No password data found');
+			}
+
+			const passwordData = JSON.parse(tempPasswordData);
+
+			const response = await fetch(
+				'/api/admin/login/password/2fa/verify',
+				{
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({
+						email: passwordData.email,
+						otp,
+					}),
+				}
+			);
+
+			const data = await response.json();
+
+			if (!response.ok) {
+				throw new Error(data.message || '2FA verification failed');
+			}
+
+			// Сохраняем токены
+			localStorage.setItem('accessToken', data.accessToken);
+			localStorage.setItem('refreshToken', data.refreshToken);
+
+			// Обновляем контекст аутентификации
+			await login();
+
+			// Clear temporary data
+			localStorage.removeItem('tempPasswordData');
+
+			showMessage('Login successful! Redirecting...');
+			setTimeout(() => navigate('/dashboard'), 1000);
+		} catch (error: any) {
+			const message =
+				error.response?.data?.message || '2FA verification failed';
+			showMessage(message, true);
+		} finally {
+			setIsLoading(false);
 		}
 	};
 
@@ -329,7 +426,7 @@ export default function AdminLogin() {
 								<label
 									htmlFor='password'
 									className='block text-sm font-medium text-gray-300'>
-									Пароль
+									Password
 								</label>
 								<input
 									id='password'
@@ -364,49 +461,339 @@ export default function AdminLogin() {
 
 				{/* 2FA форма */}
 				{step === '2fa' && (
-					<form
-						onSubmit={handle2FAVerification}
-						className='space-y-6'>
-						<div>
-							<label
-								htmlFor='otp'
-								className='block text-sm font-medium text-gray-300'>
-								2FA Code
-							</label>
-							<input
-								id='otp'
-								name='otp'
-								type='text'
-								required
-								value={otp}
-								onChange={(e) => setOtp(e.target.value)}
-								className='mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-600 bg-gray-700 placeholder-gray-400 text-white rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm'
-								placeholder='000000'
-								maxLength={6}
-								pattern='[0-9]{6}'
-							/>
+					<div className='space-y-6'>
+						{/* QR Code Section */}
+						{showQRCode && qrCode ? (
+							<div className='bg-gray-800 p-6 rounded-lg border border-gray-700'>
+								<h3 className='text-lg font-medium text-white mb-4'>
+									Google Authenticator Setup
+								</h3>
+
+								<div className='space-y-4'>
+									<div>
+										<label className='block text-sm font-medium text-gray-300 mb-2'>
+											QR Code for scanning:
+										</label>
+										<div className='flex justify-center'>
+											<img
+												src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
+													qrCode
+												)}`}
+												alt='QR Code'
+												className='border border-gray-600 rounded'
+											/>
+										</div>
+									</div>
+
+									<div>
+										<label className='block text-sm font-medium text-gray-300 mb-2'>
+											Secret for manual entry:
+										</label>
+										<div className='flex items-center space-x-2'>
+											<input
+												type='text'
+												value={google2faSecret}
+												readOnly
+												aria-label='Google 2FA secret key'
+												className='flex-1 px-3 py-2 border border-gray-600 bg-gray-700 text-white text-sm font-mono rounded-md'
+											/>
+											<button
+												onClick={() =>
+													navigator.clipboard.writeText(
+														google2faSecret
+													)
+												}
+												className='px-3 py-2 text-sm border border-gray-600 bg-gray-700 text-gray-300 rounded-md hover:bg-gray-600'
+												aria-label='Copy secret to clipboard'>
+												Copy
+											</button>
+										</div>
+									</div>
+
+									<div className='bg-blue-900 p-4 rounded-md border border-blue-700'>
+										<h4 className='text-sm font-medium text-blue-200 mb-2'>
+											Instructions:
+										</h4>
+										<ol className='text-sm text-blue-300 space-y-1'>
+											<li>
+												1. Open Google Authenticator app
+											</li>
+											<li>2. Tap "+" to add account</li>
+											<li>
+												3. Choose "Scan QR code" or
+												enter secret manually
+											</li>
+											<li>
+												4. Enter the received code below
+											</li>
+										</ol>
+									</div>
+								</div>
+							</div>
+						) : (
+							<div className='bg-gray-800 p-4 rounded-lg border border-gray-700'>
+								<div className='text-center'>
+									<p className='text-gray-300 mb-3'>
+										Need to scan QR code in Google
+										Authenticator?
+									</p>
+									<button
+										type='button'
+										onClick={async () => {
+											try {
+												const tempData =
+													localStorage.getItem(
+														'tempOAuthData'
+													);
+												if (tempData) {
+													const { userData } =
+														JSON.parse(tempData);
+													const response =
+														await fetch(
+															`/api/admin/2fa/qr/${userData.email}`
+														);
+													if (response.ok) {
+														const qrData =
+															await response.json();
+														setQrCode(
+															qrData.otpAuthUrl
+														);
+														setGoogle2faSecret(
+															qrData.google2faSecret
+														);
+														setShowQRCode(true);
+													}
+												}
+											} catch (error) {
+												console.error(
+													'Failed to get QR code:',
+													error
+												);
+											}
+										}}
+										className='px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700'>
+										Show QR Code
+									</button>
+								</div>
+							</div>
+						)}
+
+						{/* 2FA Code Form */}
+						<form
+							onSubmit={handle2FAVerification}
+							className='space-y-6'>
+							<div>
+								<label
+									htmlFor='otp'
+									className='block text-sm font-medium text-gray-300'>
+									2FA Code
+								</label>
+								<input
+									id='otp'
+									name='otp'
+									type='text'
+									required
+									value={otp}
+									onChange={(e) => setOtp(e.target.value)}
+									className='mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-600 bg-gray-700 placeholder-gray-400 text-white rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm'
+									placeholder='000000'
+									maxLength={6}
+									pattern='[0-9]{6}'
+								/>
+							</div>
+
+							<div>
+								<button
+									type='submit'
+									disabled={isLoading || loading}
+									className='group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed'>
+									{isLoading || loading
+										? 'Verifying...'
+										: 'Verify'}
+								</button>
+							</div>
+
+							<div className='text-center'>
+								<button
+									type='button'
+									onClick={() => setStep('oauth')}
+									className='text-sm text-blue-400 hover:text-blue-300'>
+									← Back to login options
+								</button>
+							</div>
+						</form>
+					</div>
+				)}
+
+				{/* Password 2FA Step */}
+				{step === 'password2fa' && (
+					<div className='space-y-6'>
+						<div className='bg-gray-800 p-6 rounded-lg border border-gray-700'>
+							<h3 className='text-lg font-medium text-white mb-4'>
+								Google Authenticator Setup
+							</h3>
+
+							<div className='space-y-4'>
+								{showQRCode ? (
+									<div>
+										<label className='block text-sm font-medium text-gray-300 mb-2'>
+											QR Code for scanning:
+										</label>
+										<div className='flex justify-center'>
+											<img
+												src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
+													qrCode
+												)}`}
+												alt='QR Code'
+												className='border border-gray-600 rounded'
+											/>
+										</div>
+									</div>
+								) : (
+									<div className='bg-gray-800 p-4 rounded-lg border border-gray-700'>
+										<div className='text-center'>
+											<p className='text-gray-300 mb-3'>
+												Need to scan QR code in Google
+												Authenticator?
+											</p>
+											<button
+												type='button'
+												onClick={async () => {
+													try {
+														const tempData =
+															localStorage.getItem(
+																'tempPasswordData'
+															);
+														if (tempData) {
+															const { email } =
+																JSON.parse(
+																	tempData
+																);
+															const response =
+																await fetch(
+																	`/api/admin/2fa/qr/${email}`
+																);
+															if (response.ok) {
+																const qrData =
+																	await response.json();
+																setQrCode(
+																	qrData.otpAuthUrl
+																);
+																setGoogle2faSecret(
+																	qrData.google2faSecret
+																);
+																setShowQRCode(
+																	true
+																);
+															}
+														}
+													} catch (error) {
+														console.error(
+															'Failed to get QR code:',
+															error
+														);
+													}
+												}}
+												className='px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700'>
+												Show QR Code
+											</button>
+										</div>
+									</div>
+								)}
+
+								{showQRCode && (
+									<div>
+										<label className='block text-sm font-medium text-gray-300 mb-2'>
+											Secret for manual entry:
+										</label>
+										<div className='flex items-center space-x-2'>
+											<input
+												type='text'
+												value={google2faSecret}
+												readOnly
+												aria-label='Google 2FA secret key'
+												className='flex-1 px-3 py-2 border border-gray-600 bg-gray-700 text-white text-sm font-mono rounded-md'
+											/>
+											<button
+												onClick={() =>
+													navigator.clipboard.writeText(
+														google2faSecret
+													)
+												}
+												className='px-3 py-2 text-sm border border-gray-600 bg-gray-700 text-gray-300 rounded-md hover:bg-gray-600'
+												aria-label='Copy secret to clipboard'>
+												Copy
+											</button>
+										</div>
+									</div>
+								)}
+
+								<div className='bg-blue-900 p-4 rounded-md border border-blue-700'>
+									<h4 className='text-sm font-medium text-blue-200 mb-2'>
+										Instructions:
+									</h4>
+									<ol className='text-sm text-blue-300 space-y-1'>
+										<li>
+											1. Open Google Authenticator app
+										</li>
+										<li>2. Tap "+" to add account</li>
+										<li>
+											3. Choose "Scan QR code" or enter
+											secret manually
+										</li>
+										<li>
+											4. Enter the received code below
+										</li>
+									</ol>
+								</div>
+							</div>
 						</div>
 
-						<div>
-							<button
-								type='submit'
-								disabled={isLoading || loading}
-								className='group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed'>
-								{isLoading || loading
-									? 'Verifying...'
-									: 'Verify'}
-							</button>
-						</div>
+						{/* Password 2FA Code Form */}
+						<form
+							onSubmit={handlePassword2FAVerification}
+							className='space-y-6'>
+							<div>
+								<label
+									htmlFor='otp'
+									className='block text-sm font-medium text-gray-300'>
+									2FA Code
+								</label>
+								<input
+									id='otp'
+									name='otp'
+									type='text'
+									required
+									value={otp}
+									onChange={(e) => setOtp(e.target.value)}
+									className='mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-600 bg-gray-700 placeholder-gray-400 text-white rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm'
+									placeholder='000000'
+									maxLength={6}
+									pattern='[0-9]{6}'
+								/>
+							</div>
 
-						<div className='text-center'>
-							<button
-								type='button'
-								onClick={() => setStep('oauth')}
-								className='text-sm text-blue-400 hover:text-blue-300'>
-								← Back to login options
-							</button>
-						</div>
-					</form>
+							<div>
+								<button
+									type='submit'
+									disabled={isLoading || loading}
+									className='group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed'>
+									{isLoading || loading
+										? 'Verifying...'
+										: 'Verify'}
+								</button>
+							</div>
+
+							<div className='text-center'>
+								<button
+									type='button'
+									onClick={() => setStep('oauth')}
+									className='text-sm text-blue-400 hover:text-blue-300'>
+									← Back to login options
+								</button>
+							</div>
+						</form>
+					</div>
 				)}
 			</div>
 		</div>

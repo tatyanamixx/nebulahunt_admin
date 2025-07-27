@@ -9,6 +9,7 @@ import {
 	X,
 	Shield,
 	Key,
+	Table,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { cn } from '../lib/utils';
@@ -21,8 +22,13 @@ import SimpleDebugButton from './SimpleDebugButton';
 const navigation = [
 	{ name: 'Dashboard', href: '/', icon: LayoutDashboard },
 	{ name: 'Users', href: '/users', icon: Users },
-	{ name: 'Settings', href: '/settings', icon: Settings },
-	{ name: 'Admin Settings', href: '/admin-settings', icon: Key },
+	{ name: 'Game Settings', href: '/settings', icon: Settings },
+	{ name: 'Admin Settings (Legacy)', href: '/admin-settings', icon: Key },
+	{
+		name: 'Admin Settings (New)',
+		href: '/admin-settings-tabs',
+		icon: Table,
+	},
 	{ name: 'Token Info', href: '/token-info', icon: Shield },
 ];
 
@@ -30,6 +36,12 @@ export default function Layout() {
 	const { user, logout } = useAuth();
 	const location = useLocation();
 	const [sidebarOpen, setSidebarOpen] = useState(false);
+
+	// Debug: Log navigation items
+	console.log(
+		'Navigation items:',
+		navigation.map((item) => item.name)
+	);
 
 	// Отладочная информация отключена для тестирования
 
@@ -52,7 +64,8 @@ export default function Layout() {
 						</h1>
 						<button
 							onClick={() => setSidebarOpen(false)}
-							className='text-gray-400 hover:text-white'>
+							className='text-gray-400 hover:text-white'
+							aria-label='Close sidebar'>
 							<X className='h-6 w-6' />
 						</button>
 					</div>
@@ -116,7 +129,8 @@ export default function Layout() {
 					<button
 						type='button'
 						className='-m-2.5 p-2.5 text-gray-300 lg:hidden'
-						onClick={() => setSidebarOpen(true)}>
+						onClick={() => setSidebarOpen(true)}
+						aria-label='Open sidebar'>
 						<Menu className='h-6 w-6' />
 					</button>
 

@@ -1,8 +1,8 @@
 /**
- * Утилиты для работы с переменными окружения
+ * Utilities for working with environment variables
  */
 
-// Отладочная информация о загрузке переменных окружения
+// Debug information about environment variables loading
 console.log('🔍 Debug: import.meta.env loaded:', {
 	VITE_DEV_MODE: import.meta.env.VITE_DEV_MODE,
 	VITE_API_URL: import.meta.env.VITE_API_URL,
@@ -15,68 +15,68 @@ console.log('🔍 Debug: import.meta.env loaded:', {
 	BASE_URL: import.meta.env.BASE_URL,
 });
 
-// Основные переменные окружения
+// Main environment variables
 export const env = {
-	// Режим разработки
+	// Development mode
 	DEV_MODE: import.meta.env.VITE_DEV_MODE === 'true' || import.meta.env.DEV,
 
-	// API настройки
+	// API settings
 	API_URL: import.meta.env.VITE_API_URL || '/api',
 
-	// Мок API
+	// Mock API
 	ENABLE_MOCK_API: import.meta.env.VITE_ENABLE_MOCK_API === 'true',
 
-	// Email настройки
+	// Email settings
 	SMTP_HOST: import.meta.env.VITE_SMTP_HOST,
 	SMTP_PORT: import.meta.env.VITE_SMTP_PORT,
 	SMTP_USER: import.meta.env.VITE_SMTP_USER,
 	SMTP_PASS: import.meta.env.VITE_SMTP_PASS,
 
-	// App настройки
+	// App settings
 	APP_NAME: import.meta.env.VITE_APP_NAME || 'Nebulahunt Admin',
 	APP_URL: import.meta.env.VITE_APP_URL || 'http://localhost:3000',
 
-	// Функциональность
-	ENABLE_2FA: import.meta.env.VITE_ENABLE_2FA !== 'false', // по умолчанию включено
-	ENABLE_EMAIL_INVITES: import.meta.env.VITE_ENABLE_EMAIL_INVITES !== 'false', // по умолчанию включено
-	ENABLE_GOOGLE_AUTH: import.meta.env.VITE_ENABLE_GOOGLE_AUTH !== 'false', // по умолчанию включено
+	// Functionality
+	ENABLE_2FA: import.meta.env.VITE_ENABLE_2FA !== 'false', // enabled by default
+	ENABLE_EMAIL_INVITES: import.meta.env.VITE_ENABLE_EMAIL_INVITES !== 'false', // enabled by default
+	ENABLE_GOOGLE_AUTH: import.meta.env.VITE_ENABLE_GOOGLE_AUTH !== 'false', // enabled by default
 };
 
 console.log('🔍 Debug: env object created:', env);
 
 /**
- * Проверяет, находимся ли мы в режиме разработки
+ * Checks if we are in development mode
  */
 export const isDevelopment = () => env.DEV_MODE;
 console.log('🔍 Debug: isDevelopment:', isDevelopment());
 
 /**
- * Проверяет, включен ли мок API
+ * Checks if mock API is enabled
  */
 export const isMockApiEnabled = () => env.DEV_MODE && env.ENABLE_MOCK_API;
 
 /**
- * Проверяет, доступна ли поддержка email
+ * Checks if email support is available
  */
 export const isEmailSupported = () => {
 	return env.ENABLE_EMAIL_INVITES && env.SMTP_HOST && env.SMTP_USER;
 };
 
 /**
- * Проверяет, можно ли использовать приложение в текущем окружении
+ * Checks if the application can be used in the current environment
  */
 export const canUseApp = () => {
-	// В режиме разработки всегда можно использовать
+	// In development mode, always can use
 	if (isDevelopment()) {
 		return true;
 	}
 
-	// В продакшене проверяем поддержку email
+	// In production, check email support
 	return isEmailSupported();
 };
 
 /**
- * Получает информацию о текущем окружении для отладки
+ * Gets information about the current environment for debugging
  */
 export const getEnvironmentInfo = () => {
 	return {
@@ -92,7 +92,7 @@ export const getEnvironmentInfo = () => {
 };
 
 /**
- * Выводит информацию об окружении в консоль (только в режиме разработки)
+ * Outputs environment information to console (development mode only)
  */
 export const logEnvironmentInfo = () => {
 	if (isDevelopment()) {

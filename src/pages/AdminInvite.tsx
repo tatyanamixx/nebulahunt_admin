@@ -20,7 +20,7 @@ export default function AdminInvite() {
 	});
 	const [message, setMessage] = useState('');
 
-	// В режиме разработки заполняем тестовые данные
+	// Fill test data in development mode
 	if (isDevelopment() && !formData.email) {
 		setFormData((prev) => ({
 			...prev,
@@ -38,16 +38,16 @@ export default function AdminInvite() {
 		e.preventDefault();
 
 		if (!formData.email || !formData.name) {
-			showMessage('Заполните все обязательные поля', true);
+			showMessage('Fill in all required fields', true);
 			return;
 		}
 
 		setLoading(true);
 		try {
 			await api.post('/admin/invite', formData);
-			showMessage(`Приглашение отправлено на ${formData.email}`);
+			showMessage(`Invitation sent to ${formData.email}`);
 
-			// Очищаем форму
+			// Clear form
 			setFormData({
 				email: '',
 				role: 'ADMIN',
@@ -55,7 +55,7 @@ export default function AdminInvite() {
 			});
 		} catch (error: any) {
 			const message =
-				error.response?.data?.message || 'Ошибка отправки приглашения';
+				error.response?.data?.message || 'Error sending invitation';
 			showMessage(message, true);
 		} finally {
 			setLoading(false);
@@ -67,20 +67,20 @@ export default function AdminInvite() {
 	};
 
 	return (
-		<div className='min-h-screen flex items-center justify-center bg-gray-50 px-4'>
+		<div className='min-h-screen flex items-center justify-center bg-gray-900 px-4'>
 			<div className='max-w-md w-full space-y-8'>
 				<div className='text-center'>
-					<div className='mx-auto h-12 w-12 text-primary-600'>📧</div>
-					<h2 className='mt-6 text-3xl font-bold text-gray-900'>
-						Пригласить администратора
+					<div className='mx-auto h-12 w-12 text-blue-400'>📧</div>
+					<h2 className='mt-6 text-3xl font-bold text-white'>
+						Invite Administrator
 					</h2>
-					<p className='mt-2 text-sm text-gray-600'>
-						Отправьте приглашение новому администратору по email
+					<p className='mt-2 text-sm text-gray-400'>
+						Send invitation to new administrator via email
 					</p>
 					{isDevelopment() && (
-						<div className='mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md'>
-							<p className='text-sm text-yellow-800'>
-								🧪 Режим разработки: Тестирование приглашений
+						<div className='mt-4 p-3 bg-yellow-900 border border-yellow-700 rounded-md'>
+							<p className='text-sm text-yellow-200'>
+								🧪 Development mode: Testing invitations
 							</p>
 						</div>
 					)}
@@ -90,9 +90,10 @@ export default function AdminInvite() {
 					<div
 						className={cn(
 							'p-4 rounded-md',
-							message.includes('Ошибка')
-								? 'bg-red-50 text-red-700'
-								: 'bg-green-50 text-green-700'
+							message.includes('Error') ||
+								message.includes('error')
+								? 'bg-red-900 text-red-200 border border-red-700'
+								: 'bg-green-900 text-green-200 border border-green-700'
 						)}>
 						{message}
 					</div>
@@ -102,8 +103,8 @@ export default function AdminInvite() {
 					<div>
 						<label
 							htmlFor='name'
-							className='block text-sm font-medium text-gray-700'>
-							Имя администратора *
+							className='block text-sm font-medium text-gray-300'>
+							Administrator Name *
 						</label>
 						<input
 							id='name'
@@ -114,16 +115,16 @@ export default function AdminInvite() {
 							onChange={(e) =>
 								handleInputChange('name', e.target.value)
 							}
-							className='mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm'
-							placeholder='Иван Иванов'
+							className='mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-600 bg-gray-700 placeholder-gray-400 text-white rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm'
+							placeholder='John Doe'
 						/>
 					</div>
 
 					<div>
 						<label
 							htmlFor='email'
-							className='block text-sm font-medium text-gray-700'>
-							Email администратора *
+							className='block text-sm font-medium text-gray-300'>
+							Administrator Email *
 						</label>
 						<input
 							id='email'
@@ -135,7 +136,7 @@ export default function AdminInvite() {
 							onChange={(e) =>
 								handleInputChange('email', e.target.value)
 							}
-							className='mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm'
+							className='mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-600 bg-gray-700 placeholder-gray-400 text-white rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm'
 							placeholder='admin@example.com'
 						/>
 					</div>
@@ -143,8 +144,8 @@ export default function AdminInvite() {
 					<div>
 						<label
 							htmlFor='role'
-							className='block text-sm font-medium text-gray-700'>
-							Роль
+							className='block text-sm font-medium text-gray-300'>
+							Role
 						</label>
 						<select
 							id='role'
@@ -156,31 +157,29 @@ export default function AdminInvite() {
 									e.target.value as 'ADMIN' | 'SUPERVISOR'
 								)
 							}
-							className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm'>
-							<option value='ADMIN'>Администратор</option>
-							<option value='SUPERVISOR'>Супервайзер</option>
+							className='mt-1 block w-full px-3 py-2 border border-gray-600 bg-gray-700 text-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm'>
+							<option value='ADMIN'>Administrator</option>
+							<option value='SUPERVISOR'>Supervisor</option>
 						</select>
 					</div>
 
-					<div className='bg-blue-50 p-4 rounded-md'>
-						<h4 className='text-sm font-medium text-blue-900 mb-2'>
-							Что произойдет:
+					<div className='bg-blue-900 p-4 rounded-md border border-blue-700'>
+						<h4 className='text-sm font-medium text-blue-200 mb-2'>
+							What will happen:
 						</h4>
-						<ul className='text-sm text-blue-800 space-y-1'>
+						<ul className='text-sm text-blue-300 space-y-1'>
 							<li>
-								• На указанный email будет отправлено
-								приглашение
+								• An invitation will be sent to the specified
+								email
 							</li>
 							<li>
-								• Администратор получит ссылку для регистрации
+								• Administrator will receive a registration link
 							</li>
 							<li>
-								• При регистрации потребуется настроить Google
-								2FA
+								• Google 2FA setup will be required during
+								registration
 							</li>
-							<li>
-								• После настройки 2FA доступ будет активирован
-							</li>
+							<li>• Access will be activated after 2FA setup</li>
 						</ul>
 					</div>
 
@@ -188,19 +187,19 @@ export default function AdminInvite() {
 						<button
 							type='button'
 							onClick={() => navigate('/dashboard')}
-							className='flex-1 py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500'>
-							Отмена
+							className='flex-1 py-2 px-4 border border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-300 bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-gray-900'>
+							Cancel
 						</button>
 						<button
 							type='submit'
 							disabled={loading}
 							className={cn(
-								'flex-1 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed'
+								'flex-1 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed'
 							)}>
 							{loading ? (
 								<div className='h-5 w-5 animate-spin border-2 border-white border-t-transparent rounded-full mx-auto' />
 							) : (
-								'Отправить приглашение'
+								'Send Invitation'
 							)}
 						</button>
 					</div>

@@ -7,14 +7,23 @@ import {
 	LogOut,
 	Menu,
 	X,
+	Shield,
+	Key,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { cn } from '../lib/utils';
+import { isDevelopment } from '../lib/env';
+import DebugPanel from './DebugPanel';
+import TestDebugButton from './TestDebugButton';
+import SimpleDebugButton from './SimpleDebugButton';
+// import PasswordStatus from './PasswordStatus';
 
 const navigation = [
-	{ name: 'Панель управления', href: '/', icon: LayoutDashboard },
-	{ name: 'Пользователи', href: '/users', icon: Users },
-	{ name: 'Настройки', href: '/settings', icon: Settings },
+	{ name: 'Dashboard', href: '/', icon: LayoutDashboard },
+	{ name: 'Users', href: '/users', icon: Users },
+	{ name: 'Settings', href: '/settings', icon: Settings },
+	{ name: 'Admin Settings', href: '/admin-settings', icon: Key },
+	{ name: 'Token Info', href: '/token-info', icon: Shield },
 ];
 
 export default function Layout() {
@@ -22,8 +31,10 @@ export default function Layout() {
 	const location = useLocation();
 	const [sidebarOpen, setSidebarOpen] = useState(false);
 
+	// Отладочная информация отключена для тестирования
+
 	return (
-		<div className='min-h-screen bg-gray-50'>
+		<div className='min-h-screen bg-gray-900'>
 			{/* Mobile sidebar */}
 			<div
 				className={cn(
@@ -34,14 +45,14 @@ export default function Layout() {
 					className='fixed inset-0 bg-gray-600 bg-opacity-75'
 					onClick={() => setSidebarOpen(false)}
 				/>
-				<div className='fixed inset-y-0 left-0 flex w-64 flex-col bg-white'>
+				<div className='fixed inset-y-0 left-0 flex w-64 flex-col bg-gray-800'>
 					<div className='flex h-16 items-center justify-between px-4'>
-						<h1 className='text-lg font-semibold text-gray-900'>
+						<h1 className='text-lg font-semibold text-white'>
 							Nebulahunt Admin
 						</h1>
 						<button
 							onClick={() => setSidebarOpen(false)}
-							className='text-gray-400 hover:text-gray-600'>
+							className='text-gray-400 hover:text-white'>
 							<X className='h-6 w-6' />
 						</button>
 					</div>
@@ -55,8 +66,8 @@ export default function Layout() {
 									className={cn(
 										'group flex items-center px-2 py-2 text-sm font-medium rounded-md',
 										isActive
-											? 'bg-primary-100 text-primary-900'
-											: 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+											? 'bg-blue-600 text-white'
+											: 'text-gray-300 hover:bg-gray-700 hover:text-white'
 									)}
 									onClick={() => setSidebarOpen(false)}>
 									<item.icon className='mr-3 h-5 w-5' />
@@ -70,9 +81,9 @@ export default function Layout() {
 
 			{/* Desktop sidebar */}
 			<div className='hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col'>
-				<div className='flex flex-col flex-grow bg-white border-r border-gray-200'>
+				<div className='flex flex-col flex-grow bg-gray-800 border-r border-gray-700'>
 					<div className='flex h-16 items-center px-4'>
-						<h1 className='text-lg font-semibold text-gray-900'>
+						<h1 className='text-lg font-semibold text-white'>
 							Nebulahunt Admin
 						</h1>
 					</div>
@@ -86,8 +97,8 @@ export default function Layout() {
 									className={cn(
 										'group flex items-center px-2 py-2 text-sm font-medium rounded-md',
 										isActive
-											? 'bg-primary-100 text-primary-900'
-											: 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+											? 'bg-blue-600 text-white'
+											: 'text-gray-300 hover:bg-gray-700 hover:text-white'
 									)}>
 									<item.icon className='mr-3 h-5 w-5' />
 									{item.name}
@@ -101,10 +112,10 @@ export default function Layout() {
 			{/* Main content */}
 			<div className='lg:pl-64'>
 				{/* Top bar */}
-				<div className='sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8'>
+				<div className='sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-700 bg-gray-800 px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8'>
 					<button
 						type='button'
-						className='-m-2.5 p-2.5 text-gray-700 lg:hidden'
+						className='-m-2.5 p-2.5 text-gray-300 lg:hidden'
 						onClick={() => setSidebarOpen(true)}>
 						<Menu className='h-6 w-6' />
 					</button>
@@ -112,15 +123,16 @@ export default function Layout() {
 					<div className='flex flex-1 gap-x-4 self-stretch lg:gap-x-6'>
 						<div className='flex flex-1' />
 						<div className='flex items-center gap-x-4 lg:gap-x-6'>
+							{/* Password Status temporarily disabled */}
 							<div className='flex items-center gap-x-2'>
-								<span className='text-sm text-gray-700'>
+								<span className='text-sm text-gray-300'>
 									{user?.username}
 								</span>
 								<button
 									onClick={logout}
-									className='flex items-center gap-x-2 text-sm text-gray-700 hover:text-gray-900'>
+									className='flex items-center gap-x-2 text-sm text-gray-300 hover:text-white'>
 									<LogOut className='h-4 w-4' />
-									Выйти
+									Logout
 								</button>
 							</div>
 						</div>
@@ -128,12 +140,14 @@ export default function Layout() {
 				</div>
 
 				{/* Page content */}
-				<main className='py-6'>
+				<main className='py-6 bg-gray-900'>
 					<div className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-8'>
 						<Outlet />
 					</div>
 				</main>
 			</div>
+
+			{/* Debug components disabled for testing */}
 		</div>
 	);
 }

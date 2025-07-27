@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { api } from '../lib/api';
 import { isDevelopment } from '../lib/env';
 import { UserPlus, Mail, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Invite {
 	id: string;
@@ -16,10 +17,15 @@ interface Invite {
 export default function InviteInfo() {
 	const [invites, setInvites] = useState<Invite[]>([]);
 	const [loading, setLoading] = useState(true);
+	const { isAuthenticated } = useAuth();
 
 	useEffect(() => {
-		fetchInvites();
-	}, []);
+		if (isAuthenticated) {
+			fetchInvites();
+		} else {
+			setLoading(false);
+		}
+	}, [isAuthenticated]);
 
 	const fetchInvites = async () => {
 		try {
@@ -27,13 +33,13 @@ export default function InviteInfo() {
 			setInvites(response.data);
 		} catch (error: any) {
 			console.error('Error fetching invites:', error);
-			// Показываем сообщение об ошибке вместо тестовых данных
+			// Show error message instead of test data
 			// if (isDevelopment()) {
 			// 	setInvites([
 			// 		{
 			// 			id: '1',
 			// 			email: 'admin1@test.com',
-			// 			name: 'Иван Иванов',
+			// 			name: 'John Doe',
 			// 			role: 'ADMIN',
 			// 			status: 'PENDING',
 			// 			createdAt: new Date().toISOString(),
@@ -44,7 +50,7 @@ export default function InviteInfo() {
 			// 		{
 			// 			id: '2',
 			// 			email: 'supervisor@test.com',
-			// 			name: 'Петр Петров',
+			// 			name: 'Jane Smith',
 			// 			role: 'SUPERVISOR',
 			// 			status: 'ACCEPTED',
 			// 			createdAt: new Date(
@@ -54,7 +60,7 @@ export default function InviteInfo() {
 			// 		{
 			// 			id: '3',
 			// 			email: 'admin2@test.com',
-			// 			name: 'Анна Сидорова',
+			// 			name: 'Bob Johnson',
 			// 			role: 'ADMIN',
 			// 			status: 'EXPIRED',
 			// 			createdAt: new Date(
@@ -87,18 +93,18 @@ export default function InviteInfo() {
 	const getStatusText = (status: string) => {
 		switch (status) {
 			case 'PENDING':
-				return 'Ожидает';
+				return 'Pending';
 			case 'ACCEPTED':
-				return 'Принято';
+				return 'Accepted';
 			case 'EXPIRED':
-				return 'Истекло';
+				return 'Expired';
 			default:
-				return 'Неизвестно';
+				return 'Unknown';
 		}
 	};
 
 	const formatDate = (dateString: string) => {
-		return new Date(dateString).toLocaleDateString('ru-RU', {
+		return new Date(dateString).toLocaleDateString('en-US', {
 			year: 'numeric',
 			month: 'short',
 			day: 'numeric',
@@ -107,15 +113,18 @@ export default function InviteInfo() {
 		});
 	};
 
+	// Временно отключаем компонент для тестирования
+	return null;
+
 	if (loading) {
 		return (
-			<div className='bg-white shadow rounded-lg p-6'>
+			<div className='bg-gray-800 shadow rounded-lg p-6 border border-gray-700'>
 				<div className='animate-pulse'>
-					<div className='h-4 bg-gray-200 rounded w-1/4 mb-4'></div>
+					<div className='h-4 bg-gray-700 rounded w-1/4 mb-4'></div>
 					<div className='space-y-3'>
-						<div className='h-4 bg-gray-200 rounded'></div>
-						<div className='h-4 bg-gray-200 rounded'></div>
-						<div className='h-4 bg-gray-200 rounded'></div>
+						<div className='h-4 bg-gray-700 rounded'></div>
+						<div className='h-4 bg-gray-700 rounded'></div>
+						<div className='h-4 bg-gray-700 rounded'></div>
 					</div>
 				</div>
 			</div>
@@ -123,58 +132,56 @@ export default function InviteInfo() {
 	}
 
 	return (
-		<div className='bg-white shadow rounded-lg'>
+		<div className='bg-gray-800 shadow rounded-lg border border-gray-700'>
 			<div className='px-4 py-5 sm:p-6'>
 				<div className='flex items-center justify-between mb-4'>
-					<h3 className='text-lg leading-6 font-medium text-gray-900 flex items-center'>
+					<h3 className='text-lg leading-6 font-medium text-white flex items-center'>
 						<UserPlus className='h-5 w-5 mr-2' />
-						Приглашения администраторов
+						Administrator Invitations
 					</h3>
-					<span className='text-sm text-gray-500'>
-						{invites.length} приглашений
+					<span className='text-sm text-gray-400'>
+						{invites.length} invitations
 					</span>
 				</div>
 
 				{invites.length === 0 ? (
 					<div className='text-center py-8'>
 						<Mail className='h-12 w-12 text-gray-400 mx-auto mb-4' />
-						<p className='text-gray-500'>
-							Нет активных приглашений
-						</p>
+						<p className='text-gray-400'>No active invitations</p>
 					</div>
 				) : (
 					<div className='overflow-hidden'>
-						<table className='min-w-full divide-y divide-gray-200'>
-							<thead className='bg-gray-50'>
+						<table className='min-w-full divide-y divide-gray-700'>
+							<thead className='bg-gray-700'>
 								<tr>
-									<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-										Администратор
+									<th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider'>
+										Administrator
 									</th>
-									<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-										Роль
+									<th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider'>
+										Role
 									</th>
-									<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-										Статус
+									<th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider'>
+										Status
 									</th>
-									<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-										Создано
+									<th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider'>
+										Created
 									</th>
-									<th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-										Истекает
+									<th className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider'>
+										Expires
 									</th>
 								</tr>
 							</thead>
-							<tbody className='bg-white divide-y divide-gray-200'>
+							<tbody className='bg-gray-800 divide-y divide-gray-700'>
 								{invites.map((invite) => (
 									<tr
 										key={invite.id}
-										className='hover:bg-gray-50'>
+										className='hover:bg-gray-700'>
 										<td className='px-6 py-4 whitespace-nowrap'>
 											<div>
-												<div className='text-sm font-medium text-gray-900'>
+												<div className='text-sm font-medium text-white'>
 													{invite.name}
 												</div>
-												<div className='text-sm text-gray-500'>
+												<div className='text-sm text-gray-400'>
 													{invite.email}
 												</div>
 											</div>
@@ -187,24 +194,24 @@ export default function InviteInfo() {
 														: 'bg-blue-100 text-blue-800'
 												}`}>
 												{invite.role === 'SUPERVISOR'
-													? 'Супервайзер'
-													: 'Администратор'}
+													? 'Supervisor'
+													: 'Administrator'}
 											</span>
 										</td>
 										<td className='px-6 py-4 whitespace-nowrap'>
 											<div className='flex items-center'>
 												{getStatusIcon(invite.status)}
-												<span className='ml-2 text-sm text-gray-900'>
+												<span className='ml-2 text-sm text-white'>
 													{getStatusText(
 														invite.status
 													)}
 												</span>
 											</div>
 										</td>
-										<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+										<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-400'>
 											{formatDate(invite.createdAt)}
 										</td>
-										<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+										<td className='px-6 py-4 whitespace-nowrap text-sm text-gray-400'>
 											{formatDate(invite.expiresAt)}
 										</td>
 									</tr>

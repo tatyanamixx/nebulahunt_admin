@@ -6,16 +6,67 @@ const api = axios.create({
 	timeout: 10000,
 });
 
-// Мок для режима разработки (отключен для подключения к реальному серверу)
+// Add request interceptor for debugging and JWT token
+api.interceptors.request.use(
+	(config) => {
+		const token = localStorage.getItem('accessToken');
+
+		// Add JWT token to Authorization header if present
+		if (token) {
+			config.headers.Authorization = `Bearer ${token}`;
+		}
+
+		console.log('🔐 API Request:', {
+			method: config.method?.toUpperCase(),
+			url: config.url,
+			baseURL: config.baseURL,
+			fullURL: `${config.baseURL}${config.url}`,
+			data: config.data,
+			hasToken: !!token,
+			tokenPreview: token ? `${token.substring(0, 20)}...` : 'none',
+			authorizationHeader: config.headers.Authorization
+				? 'present'
+				: 'missing',
+		});
+		return config;
+	},
+	(error) => {
+		console.error('🔐 API Request Error:', error);
+		return Promise.reject(error);
+	}
+);
+
+// Add response interceptor for debugging
+api.interceptors.response.use(
+	(response) => {
+		console.log('🔐 API Response:', {
+			status: response.status,
+			url: response.config.url,
+			data: response.data,
+		});
+		return response;
+	},
+	(error) => {
+		console.error('🔐 API Response Error:', {
+			status: error.response?.status,
+			url: error.config?.url,
+			data: error.response?.data,
+			message: error.message,
+		});
+		return Promise.reject(error);
+	}
+);
+
+// Mock for development mode (disabled for connecting to real server)
 const enableMockApi = false; // isMockApiEnabled();
 
 if (false) {
 	// isDevelopment() && enableMockApi) {
-	// Перехватываем запросы в режиме разработки
+	// Intercept requests in development mode
 	api.interceptors.request.use(async (config) => {
-		// Мокаем ответы для тестирования
+		// Mock responses for testing
 		if (config.url === '/admin/login' && config.method === 'post') {
-			// Симулируем успешный админ логин
+			// Simulate successful admin login
 			return Promise.reject({
 				response: {
 					data: {
@@ -29,7 +80,7 @@ if (false) {
 		}
 
 		if (config.url === '/admin/2fa/verify' && config.method === 'post') {
-			// Симулируем успешную 2FA верификацию
+			// Simulate successful 2FA verification
 			return Promise.reject({
 				response: {
 					data: {
@@ -45,7 +96,7 @@ if (false) {
 		}
 
 		if (config.url === '/admin/invite' && config.method === 'post') {
-			// Симулируем успешную отправку приглашения
+			// Simulate successful invitation sending
 			return Promise.reject({
 				response: {
 					data: {
@@ -60,7 +111,7 @@ if (false) {
 			config.url === '/admin/invite/validate' &&
 			config.method === 'get'
 		) {
-			// Симулируем валидацию токена приглашения
+			// Simulate invitation token validation
 			return Promise.reject({
 				response: {
 					data: {
@@ -73,7 +124,7 @@ if (false) {
 		}
 
 		if (config.url === '/admin/register' && config.method === 'post') {
-			// Симулируем успешную регистрацию администратора
+			// Simulate successful administrator registration
 			return Promise.reject({
 				response: {
 					data: {
@@ -87,7 +138,7 @@ if (false) {
 		}
 
 		if (config.url === '/admin/2fa/complete' && config.method === 'post') {
-			// Симулируем успешное завершение 2FA
+			// Simulate successful 2FA completion
 			return Promise.reject({
 				response: {
 					data: {
@@ -98,7 +149,7 @@ if (false) {
 		}
 
 		if (config.url === '/admin/stats' && config.method === 'get') {
-			// Симулируем статистику дашборда
+			// Simulate dashboard statistics
 			return Promise.reject({
 				response: {
 					data: {
@@ -114,7 +165,7 @@ if (false) {
 		}
 
 		if (config.url === '/admin/users' && config.method === 'get') {
-			// Симулируем список пользователей
+			// Simulate user list
 			return Promise.reject({
 				response: {
 					data: [
@@ -168,7 +219,7 @@ if (false) {
 			config.url.includes('/block') &&
 			config.method === 'post'
 		) {
-			// Симулируем блокировку пользователя
+			// Simulate user blocking
 			return Promise.reject({
 				response: {
 					data: {
@@ -184,7 +235,7 @@ if (false) {
 			config.url.includes('/unblock') &&
 			config.method === 'post'
 		) {
-			// Симулируем разблокировку пользователя
+			// Simulate user unblocking
 			return Promise.reject({
 				response: {
 					data: {
@@ -195,7 +246,7 @@ if (false) {
 		}
 
 		if (config.url === '/admin/invites' && config.method === 'get') {
-			// Симулируем список приглашений
+			// Simulate invitation list
 			return Promise.reject({
 				response: {
 					data: [
@@ -242,7 +293,7 @@ if (false) {
 		}
 
 		if (config.url === '/admin/init' && config.method === 'post') {
-			// Симулируем успешную инициализацию администратора
+			// Simulate successful administrator initialization
 			return Promise.reject({
 				response: {
 					data: {
@@ -261,7 +312,7 @@ if (false) {
 			config.url === '/admin/supervisor/init' &&
 			config.method === 'post'
 		) {
-			// Симулируем успешную инициализацию супервайзера
+			// Simulate successful supervisor initialization
 			return Promise.reject({
 				response: {
 					data: {
@@ -277,7 +328,7 @@ if (false) {
 		}
 
 		if (config.url === '/admin/settings' && config.method === 'get') {
-			// Возвращаем тестовые настройки
+			// Return test settings
 			return Promise.reject({
 				response: {
 					data: {
@@ -292,7 +343,7 @@ if (false) {
 		}
 
 		if (config.url === '/admin/settings' && config.method === 'put') {
-			// Симулируем успешное сохранение настроек
+			// Simulate successful settings save
 			return Promise.reject({
 				response: {
 					data: {
@@ -307,7 +358,7 @@ if (false) {
 	});
 }
 
-// Request interceptor для добавления токена
+// Request interceptor for adding token
 api.interceptors.request.use(
 	(config) => {
 		const token = localStorage.getItem('accessToken');
@@ -321,11 +372,11 @@ api.interceptors.request.use(
 	}
 );
 
-// Response interceptor для обработки ошибок
+// Response interceptor for error handling
 api.interceptors.response.use(
 	(response) => response,
 	async (error) => {
-		// В режиме разработки обрабатываем мок-ответы
+		// In development mode, handle mock responses
 		if (isDevelopment() && enableMockApi && error.response?.data) {
 			// Если это мок-ответ, обрабатываем его как успешный
 			if (error.response.data.message || error.response.data.settings) {
@@ -341,7 +392,8 @@ api.interceptors.response.use(
 			const refreshToken = localStorage.getItem('refreshToken');
 			if (refreshToken) {
 				try {
-					const response = await axios.post('/api/auth/refresh', {
+					// Пытаемся обновить токен через админский endpoint
+					const response = await axios.post('/api/admin/refresh', {
 						refreshToken,
 					});
 

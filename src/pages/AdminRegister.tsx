@@ -29,25 +29,25 @@ export default function AdminRegister() {
 	const [google2faSecret, setGoogle2faSecret] = useState('');
 	const [inviteToken, setInviteToken] = useState('');
 
-	// Получаем токен приглашения из URL
+	// Get invitation token from URL
 	useEffect(() => {
 		const token = searchParams.get('token');
 		if (token) {
 			setInviteToken(token);
-			// Проверяем валидность токена
+			// Validate token
 			validateInviteToken(token);
 		}
 	}, [searchParams]);
 
-	// В режиме разработки заполняем тестовые данные
+	// Fill test data in development mode
 	useEffect(() => {
 		if (isDevelopment() && !formData.email) {
 			setFormData((prev) => ({
 				...prev,
 				email: 'admin@test.com',
 				name: 'Test Admin',
-				password: 'testpass123',
-				confirmPassword: 'testpass123',
+				password: 'TestPass123!',
+				confirmPassword: 'TestPass123!',
 			}));
 		}
 	}, []);
@@ -70,11 +70,33 @@ export default function AdminRegister() {
 			}));
 		} catch (error: any) {
 			const message =
-				error.response?.data?.message || 'Недействительное приглашение';
+				error.response?.data?.message || 'Invalid invitation';
 			showMessage(message, true);
-			// Перенаправляем на страницу входа через 3 секунды
+			// Redirect to login page after 3 seconds
 			setTimeout(() => navigate('/admin/login'), 3000);
 		}
+	};
+
+	const validatePassword = (password: string) => {
+		const minLength = 8;
+
+		if (password.length < minLength) {
+			return `Пароль должен содержать минимум ${minLength} символов`;
+		}
+
+		if (!/\d/.test(password)) {
+			return 'Пароль должен содержать хотя бы одну цифру';
+		}
+
+		if (!/[a-zA-Z]/.test(password)) {
+			return 'Пароль должен содержать хотя бы одну букву';
+		}
+
+		if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+			return 'Пароль должен содержать хотя бы один специальный символ';
+		}
+
+		return null;
 	};
 
 	const handleRegister = async (e: React.FormEvent) => {
@@ -90,8 +112,9 @@ export default function AdminRegister() {
 			return;
 		}
 
-		if (formData.password.length < 8) {
-			showMessage('Пароль должен содержать минимум 8 символов', true);
+		const passwordError = validatePassword(formData.password);
+		if (passwordError) {
+			showMessage(passwordError, true);
 			return;
 		}
 
@@ -111,7 +134,7 @@ export default function AdminRegister() {
 			showMessage('Регистрация успешна! Настройте Google Authenticator');
 		} catch (error: any) {
 			const message =
-				error.response?.data?.message || 'Ошибка регистрации';
+				error.response?.data?.message || 'Registration error';
 			showMessage(message, true);
 		} finally {
 			setLoading(false);
@@ -122,7 +145,7 @@ export default function AdminRegister() {
 		e.preventDefault();
 
 		if (!formData.otp) {
-			showMessage('Введите код 2FA', true);
+			showMessage('Enter 2FA code', true);
 			return;
 		}
 
@@ -134,11 +157,13 @@ export default function AdminRegister() {
 				inviteToken,
 			});
 
-			showMessage('Регистрация завершена! Перенаправление на вход...');
+			showMessage(
+				'Регистрация завершена! Перенаправление на страницу входа...'
+			);
 			setTimeout(() => navigate('/admin/login'), 2000);
 		} catch (error: any) {
 			const message =
-				error.response?.data?.message || 'Ошибка верификации 2FA';
+				error.response?.data?.message || '2FA verification error';
 			showMessage(message, true);
 		} finally {
 			setLoading(false);
@@ -151,18 +176,18 @@ export default function AdminRegister() {
 
 	if (!inviteToken && !isDevelopment()) {
 		return (
-			<div className='min-h-screen flex items-center justify-center bg-gray-50 px-4'>
+			<div className='min-h-screen flex items-center justify-center bg-gray-900 px-4'>
 				<div className='max-w-md w-full text-center'>
-					<div className='mx-auto h-12 w-12 text-red-600'>❌</div>
-					<h2 className='mt-6 text-2xl font-bold text-gray-900'>
+					<div className='mx-auto h-12 w-12 text-red-400'>❌</div>
+					<h2 className='mt-6 text-2xl font-bold text-white'>
 						Недействительная ссылка
 					</h2>
-					<p className='mt-2 text-sm text-gray-600'>
+					<p className='mt-2 text-sm text-gray-400'>
 						Для регистрации требуется действующее приглашение
 					</p>
 					<button
 						onClick={() => navigate('/admin/login')}
-						className='mt-4 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700'>
+						className='mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700'>
 						Перейти к входу
 					</button>
 				</div>
@@ -171,26 +196,26 @@ export default function AdminRegister() {
 	}
 
 	return (
-		<div className='min-h-screen flex items-center justify-center bg-gray-50 px-4'>
+		<div className='min-h-screen flex items-center justify-center bg-gray-900 px-4'>
 			<div className='max-w-md w-full space-y-8'>
 				<div className='text-center'>
-					<div className='mx-auto h-12 w-12 text-primary-600'>
+					<div className='mx-auto h-12 w-12 text-blue-400'>
 						{step === 'register' ? '👤' : '🔐'}
 					</div>
-					<h2 className='mt-6 text-3xl font-bold text-gray-900'>
+					<h2 className='mt-6 text-3xl font-bold text-white'>
 						{step === 'register'
 							? 'Регистрация администратора'
 							: 'Настройка 2FA'}
 					</h2>
-					<p className='mt-2 text-sm text-gray-600'>
+					<p className='mt-2 text-sm text-gray-400'>
 						{step === 'register'
 							? 'Завершите регистрацию администратора'
 							: 'Настройте Google Authenticator для завершения регистрации'}
 					</p>
 					{isDevelopment() && (
-						<div className='mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md'>
-							<p className='text-sm text-yellow-800'>
-								🧪 Режим разработки: Тестирование регистрации
+						<div className='mt-4 p-3 bg-yellow-900 border border-yellow-700 rounded-md'>
+							<p className='text-sm text-yellow-200'>
+								🧪 Development mode: Testing registration
 							</p>
 						</div>
 					)}
@@ -200,9 +225,10 @@ export default function AdminRegister() {
 					<div
 						className={cn(
 							'p-4 rounded-md',
-							message.includes('Ошибка')
-								? 'bg-red-50 text-red-700'
-								: 'bg-green-50 text-green-700'
+							message.includes('error') ||
+								message.includes('Error')
+								? 'bg-red-900 text-red-200 border border-red-700'
+								: 'bg-green-900 text-green-200 border border-green-700'
 						)}>
 						{message}
 					</div>
@@ -213,7 +239,7 @@ export default function AdminRegister() {
 						<div>
 							<label
 								htmlFor='name'
-								className='block text-sm font-medium text-gray-700'>
+								className='block text-sm font-medium text-gray-300'>
 								Имя *
 							</label>
 							<input
@@ -225,15 +251,15 @@ export default function AdminRegister() {
 								onChange={(e) =>
 									handleInputChange('name', e.target.value)
 								}
-								className='mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm'
-								placeholder='Иван Иванов'
+								className='mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-600 bg-gray-700 placeholder-gray-400 text-white rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm'
+								placeholder='John Doe'
 							/>
 						</div>
 
 						<div>
 							<label
 								htmlFor='email'
-								className='block text-sm font-medium text-gray-700'>
+								className='block text-sm font-medium text-gray-300'>
 								Email *
 							</label>
 							<input
@@ -246,7 +272,7 @@ export default function AdminRegister() {
 								onChange={(e) =>
 									handleInputChange('email', e.target.value)
 								}
-								className='mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm'
+								className='mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-600 bg-gray-700 placeholder-gray-400 text-white rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm'
 								placeholder='admin@example.com'
 								readOnly={!!inviteToken}
 							/>
@@ -255,7 +281,7 @@ export default function AdminRegister() {
 						<div>
 							<label
 								htmlFor='password'
-								className='block text-sm font-medium text-gray-700'>
+								className='block text-sm font-medium text-gray-300'>
 								Пароль *
 							</label>
 							<input
@@ -271,7 +297,7 @@ export default function AdminRegister() {
 										e.target.value
 									)
 								}
-								className='mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm'
+								className='mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-600 bg-gray-700 placeholder-gray-400 text-white rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm'
 								placeholder='Минимум 8 символов'
 							/>
 						</div>
@@ -279,7 +305,7 @@ export default function AdminRegister() {
 						<div>
 							<label
 								htmlFor='confirmPassword'
-								className='block text-sm font-medium text-gray-700'>
+								className='block text-sm font-medium text-gray-300'>
 								Подтвердите пароль *
 							</label>
 							<input
@@ -295,7 +321,7 @@ export default function AdminRegister() {
 										e.target.value
 									)
 								}
-								className='mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm'
+								className='mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-600 bg-gray-700 placeholder-gray-400 text-white rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm'
 								placeholder='Повторите пароль'
 							/>
 						</div>
@@ -304,7 +330,7 @@ export default function AdminRegister() {
 							type='submit'
 							disabled={loading}
 							className={cn(
-								'group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed'
+								'group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed'
 							)}>
 							{loading ? (
 								<div className='h-5 w-5 animate-spin border-2 border-white border-t-transparent rounded-full' />
@@ -317,14 +343,14 @@ export default function AdminRegister() {
 
 				{step === '2fa' && (
 					<div className='space-y-6'>
-						<div className='bg-white p-6 rounded-lg border border-gray-200'>
-							<h3 className='text-lg font-medium text-gray-900 mb-4'>
+						<div className='bg-gray-800 p-6 rounded-lg border border-gray-700'>
+							<h3 className='text-lg font-medium text-white mb-4'>
 								Настройка Google Authenticator
 							</h3>
 
 							<div className='space-y-4'>
 								<div>
-									<label className='block text-sm font-medium text-gray-700 mb-2'>
+									<label className='block text-sm font-medium text-gray-300 mb-2'>
 										QR-код для сканирования:
 									</label>
 									<div className='flex justify-center'>
@@ -333,13 +359,13 @@ export default function AdminRegister() {
 												qrCode
 											)}`}
 											alt='QR Code'
-											className='border border-gray-300 rounded'
+											className='border border-gray-600 rounded'
 										/>
 									</div>
 								</div>
 
 								<div>
-									<label className='block text-sm font-medium text-gray-700 mb-2'>
+									<label className='block text-sm font-medium text-gray-300 mb-2'>
 										Секрет для ручного ввода:
 									</label>
 									<div className='flex items-center space-x-2'>
@@ -347,8 +373,8 @@ export default function AdminRegister() {
 											type='text'
 											value={google2faSecret}
 											readOnly
-											aria-label='Google 2FA секретный ключ'
-											className='flex-1 px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-sm font-mono'
+											aria-label='Google 2FA secret key'
+											className='flex-1 px-3 py-2 border border-gray-600 bg-gray-700 text-white text-sm font-mono rounded-md'
 										/>
 										<button
 											onClick={() =>
@@ -356,18 +382,18 @@ export default function AdminRegister() {
 													google2faSecret
 												)
 											}
-											className='px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50'
-											aria-label='Копировать секрет в буфер обмена'>
+											className='px-3 py-2 text-sm border border-gray-600 bg-gray-700 text-gray-300 rounded-md hover:bg-gray-600'
+											aria-label='Copy secret to clipboard'>
 											Копировать
 										</button>
 									</div>
 								</div>
 
-								<div className='bg-blue-50 p-4 rounded-md'>
-									<h4 className='text-sm font-medium text-blue-900 mb-2'>
+								<div className='bg-blue-900 p-4 rounded-md border border-blue-700'>
+									<h4 className='text-sm font-medium text-blue-200 mb-2'>
 										Инструкции:
 									</h4>
-									<ol className='text-sm text-blue-800 space-y-1'>
+									<ol className='text-sm text-blue-300 space-y-1'>
 										<li>
 											1. Откройте Google Authenticator
 										</li>
@@ -391,7 +417,7 @@ export default function AdminRegister() {
 							<div>
 								<label
 									htmlFor='otp'
-									className='block text-sm font-medium text-gray-700'>
+									className='block text-sm font-medium text-gray-300'>
 									Код 2FA *
 								</label>
 								<input
@@ -409,7 +435,7 @@ export default function AdminRegister() {
 												.slice(0, 6)
 										)
 									}
-									className='mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm'
+									className='mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-600 bg-gray-700 placeholder-gray-400 text-white rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm'
 									placeholder='000000'
 									maxLength={6}
 								/>
@@ -419,7 +445,7 @@ export default function AdminRegister() {
 								<button
 									type='button'
 									onClick={() => setStep('register')}
-									className='flex-1 py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500'>
+									className='flex-1 py-2 px-4 border border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-300 bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-gray-900'>
 									Назад
 								</button>
 								<button
@@ -428,7 +454,7 @@ export default function AdminRegister() {
 										loading || formData.otp.length !== 6
 									}
 									className={cn(
-										'flex-1 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed'
+										'flex-1 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed'
 									)}>
 									{loading ? (
 										<div className='h-5 w-5 animate-spin border-2 border-white border-t-transparent rounded-full mx-auto' />

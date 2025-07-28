@@ -70,6 +70,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	const refreshToken = async () => {
 		try {
 			const refreshTokenValue = localStorage.getItem('refreshToken');
+			console.log(
+				'🔐 Attempting token refresh with refresh token:',
+				refreshTokenValue
+					? refreshTokenValue.substring(0, 50) + '...'
+					: 'none'
+			);
+
 			if (!refreshTokenValue) {
 				throw new Error('No refresh token found');
 			}
@@ -88,8 +95,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			localStorage.setItem('accessToken', accessToken);
 			localStorage.setItem('refreshToken', newRefreshToken);
 			setUser(userData);
-		} catch (error) {
+			console.log('🔐 Token refresh successful, user set:', userData);
+		} catch (error: any) {
 			console.error('Token refresh error:', error);
+			console.error('Refresh error details:', {
+				status: error.response?.status,
+				statusText: error.response?.statusText,
+				data: error.response?.data,
+			});
 			// If token refresh failed, logout
 			logout();
 			throw error;
@@ -98,42 +111,75 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 	// Check existing session on load
 	useEffect(() => {
-		const token = localStorage.getItem('accessToken');
-		if (token) {
-			try {
-				const payload = JSON.parse(atob(token.split('.')[1]));
-				console.log('Token payload:', payload);
+		const checkSession = async () => {
+			const token = localStorage.getItem('accessToken');
+			if (token) {
+				try {
+					const payload = JSON.parse(atob(token.split('.')[1]));
+					console.log('Token payload:', payload);
 
-				// Check that token is not expired
-				const currentTime = Math.floor(Date.now() / 1000);
-				if (payload.exp && payload.exp < currentTime) {
-					console.log('Token expired, attempting refresh');
-					refreshToken();
-					return;
+					// Check that token is not expired
+					const currentTime = Math.floor(Date.now() / 1000);
+					if (payload.exp && payload.exp < currentTime) {
+						console.log('Token expired, attempting refresh');
+						try {
+							await refreshToken();
+							return;
+						} catch (error) {
+							console.error('Token refresh failed:', error);
+							logout();
+							return;
+						}
+					}
+
+					// Verify token with server
+					try {
+						console.log(
+							'🔐 Attempting server verification with token:',
+							token.substring(0, 50) + '...'
+						);
+						const response = await api.get('/admin/me');
+						console.log(
+							'Server verification response:',
+							response.data
+						);
+						setUser(response.data);
+					} catch (error: any) {
+						console.error('Server verification failed:', error);
+						console.error('Error details:', {
+							status: error.response?.status,
+							statusText: error.response?.statusText,
+							data: error.response?.data,
+						});
+						// If server verification fails, try to refresh token
+						try {
+							console.log(
+								'🔐 Attempting token refresh after verification failure'
+							);
+							await refreshToken();
+						} catch (refreshError) {
+							console.error(
+								'Token refresh failed after server verification:',
+								refreshError
+							);
+							logout();
+						}
+						return;
+					}
+				} catch (error) {
+					console.error('Token parsing error:', error);
+					localStorage.removeItem('accessToken');
+					localStorage.removeItem('refreshToken');
+					setUser(null);
 				}
-
-				setUser({
-					id: payload.id,
-					email: payload.email,
-					username: payload.username,
-					firstName: payload.firstName,
-					lastName: payload.lastName,
-					role: payload.role,
-					provider: payload.provider,
-					providerId: payload.providerId,
-				});
-			} catch (error) {
-				console.error('Token parsing error:', error);
-				localStorage.removeItem('accessToken');
-				localStorage.removeItem('refreshToken');
-				setUser(null); // Сбрасываем пользователя при ошибке парсинга
+			} else {
+				console.log('No access token found, clearing user');
+				setUser(null);
 			}
-		} else {
-			// Если токена нет, сбрасываем пользователя
-			console.log('No access token found, clearing user');
-			setUser(null);
-		}
-		setLoading(false);
+			setLoading(false);
+		};
+
+		checkSession();
 	}, []);
 
 	// Google OAuth login

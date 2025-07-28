@@ -10,6 +10,7 @@ import AdminSettingsWithTabs from './pages/AdminSettingsWithTabs';
 import Settings from './pages/Settings';
 import Dashboard from './pages/Dashboard';
 import Users from './pages/Users';
+import GameSettings from './pages/GameSettings';
 import TokenInfo from './pages/TokenInfo';
 import Layout from './components/Layout';
 import EnvDebugger from './components/EnvDebugger';
@@ -58,6 +59,7 @@ function AppRoutes() {
 				/>
 				<Route path='/dashboard' element={<Dashboard />} />
 				<Route path='/users' element={<Users />} />
+				<Route path='/game-settings' element={<GameSettings />} />
 				<Route path='/settings' element={<Settings />} />
 				<Route path='/admin-settings' element={<AdminSettings />} />
 				<Route

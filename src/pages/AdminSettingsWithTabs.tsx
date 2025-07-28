@@ -6,6 +6,7 @@ import { AccountInfoTab } from '../components/AccountInfoTab';
 import { TwoFactorTab } from '../components/TwoFactorTab';
 import { PasswordTab } from '../components/PasswordTab';
 import { InvitationsTab } from '../components/InvitationsTab';
+import { UserManagerTab } from '../components/UserManagerTab';
 
 interface Invite {
 	id: string;
@@ -17,7 +18,7 @@ interface Invite {
 	expiresAt: string;
 }
 
-type TabType = 'account' | '2fa' | 'password' | 'invitations';
+type TabType = 'account' | '2fa' | 'password' | 'invitations' | 'users';
 
 export default function AdminSettingsWithTabs() {
 	const { user, isAuthenticated } = useAuth();
@@ -52,6 +53,9 @@ export default function AdminSettingsWithTabs() {
 	const [inviteRole, setInviteRole] = useState('ADMIN');
 	const [invites, setInvites] = useState<Invite[]>([]);
 
+	// User management states
+	const [users, setUsers] = useState<any[]>([]);
+
 	// Check 2FA status on component mount
 	useEffect(() => {
 		const check2FAStatus = async () => {
@@ -74,6 +78,13 @@ export default function AdminSettingsWithTabs() {
 	useEffect(() => {
 		if (activeTab === 'invitations' && isAuthenticated && user) {
 			fetchInvites();
+		}
+	}, [activeTab, isAuthenticated, user]);
+
+	// Fetch users when switching to users tab
+	useEffect(() => {
+		if (activeTab === 'users' && isAuthenticated && user) {
+			fetchUsers();
 		}
 	}, [activeTab, isAuthenticated, user]);
 
@@ -102,6 +113,15 @@ export default function AdminSettingsWithTabs() {
 			setInvites(response.data || []);
 		} catch (error: any) {
 			console.error('Failed to fetch invites:', error);
+		}
+	};
+
+	const fetchUsers = async () => {
+		try {
+			const response = await api.get('/admin/users');
+			setUsers(response.data || []);
+		} catch (error: any) {
+			console.error('Failed to fetch users:', error);
 		}
 	};
 

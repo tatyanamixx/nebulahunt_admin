@@ -10,6 +10,7 @@ import {
 	Shield,
 	Key,
 	Table,
+	Gamepad2,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { cn } from '../lib/utils';
@@ -22,7 +23,7 @@ import SimpleDebugButton from './SimpleDebugButton';
 const navigation = [
 	{ name: 'Dashboard', href: '/', icon: LayoutDashboard },
 	{ name: 'Users', href: '/users', icon: Users },
-	{ name: 'Game Settings', href: '/settings', icon: Settings },
+	{ name: 'Game Settings', href: '/game-settings', icon: Gamepad2 },
 	{ name: 'Admin Settings (Legacy)', href: '/admin-settings', icon: Key },
 	{
 		name: 'Admin Settings (New)',

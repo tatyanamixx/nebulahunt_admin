@@ -6,26 +6,52 @@ import {
 	UserCheck,
 	UserX,
 	Search,
+	Filter,
 	RefreshCw,
+	Eye,
+	EyeOff,
+	Shield,
 	Calendar,
 	Wallet,
 } from 'lucide-react';
+import { TokenDebugger } from '../components/TokenDebugger';
 
 interface User {
 	id: number;
-	username?: string;
+	username: string;
 	role: 'USER' | 'SYSTEM';
 	blocked: boolean;
 	tonWallet?: string;
 	referral?: number;
 	createdAt?: string;
+	lastLoginAt?: string;
+	userState?: {
+		stardust: number;
+		darkMatter: number;
+		stars: number;
+		tgStars: number;
+		tonToken: number;
+		lastLoginDate?: string;
+		currentStreak: number;
+		maxStreak: number;
+		chaosLevel: number;
+		stabilityLevel: number;
+		entropyVelocity: number;
+	};
 }
 
-export default function Users() {
+export default function UsersPage() {
 	const { isAuthenticated, loading: authLoading } = useAuth();
 	const [users, setUsers] = useState<User[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [searchTerm, setSearchTerm] = useState('');
+	const [filterRole, setFilterRole] = useState<'ALL' | 'USER' | 'SYSTEM'>(
+		'ALL'
+	);
+	const [filterStatus, setFilterStatus] = useState<
+		'ALL' | 'ACTIVE' | 'BLOCKED'
+	>('ALL');
+	const [showUserDetails, setShowUserDetails] = useState<number | null>(null);
 	const [message, setMessage] = useState('');
 	const [messageType, setMessageType] = useState<'success' | 'error'>(
 		'success'
@@ -39,25 +65,12 @@ export default function Users() {
 
 	const fetchUsers = async () => {
 		try {
-			console.log('🔍 Fetching users...');
 			setLoading(true);
 			const response = await api.get('/admin-users/users');
-			console.log('🔍 Users response:', response.data);
-			console.log('🔍 Users array length:', response.data?.length);
-			console.log('🔍 Users array:', response.data);
-			// Convert Sequelize objects to plain objects
-			const plainUsers =
-				response.data?.map((user: any) => user.dataValues || user) ||
-				[];
-			console.log('🔍 Plain users:', plainUsers);
-			setUsers(plainUsers);
+			setUsers(response.data || []);
 		} catch (error: any) {
-			console.error('❌ Error fetching users:', error);
-			console.error('❌ Error details:', {
-				status: error.response?.status,
-				statusText: error.response?.statusText,
-				data: error.response?.data,
-			});
+			console.error('Error fetching users:', error);
+			// Don't show error message for auth errors, let AuthContext handle them
 			if (
 				error.response?.status !== 401 &&
 				error.response?.status !== 403
@@ -71,19 +84,11 @@ export default function Users() {
 
 	const toggleUserBlock = async (userId: number, blocked: boolean) => {
 		try {
-			console.log('🔍 Toggling user block:', {
-				userId,
-				blocked,
-				newBlocked: !blocked,
+			await api.patch(`/admin-users/users/${userId}/block`, {
+				blocked: !blocked,
 			});
-			const response = await api.patch(
-				`/admin-users/users/${userId}/block`,
-				{
-					blocked: !blocked,
-				}
-			);
-			console.log('🔍 Block toggle response:', response.data);
 
+			// Update local state
 			setUsers((prevUsers) =>
 				prevUsers.map((user) =>
 					user.id === userId ? { ...user, blocked: !blocked } : user
@@ -95,12 +100,8 @@ export default function Users() {
 				'success'
 			);
 		} catch (error: any) {
-			console.error('❌ Error toggling user block:', error);
-			console.error('❌ Error details:', {
-				status: error.response?.status,
-				statusText: error.response?.statusText,
-				data: error.response?.data,
-			});
+			console.error('Error toggling user block:', error);
+			// Don't show error message for auth errors, let AuthContext handle them
 			if (
 				error.response?.status !== 401 &&
 				error.response?.status !== 403
@@ -124,21 +125,25 @@ export default function Users() {
 		return new Date(dateString).toLocaleDateString();
 	};
 
-	console.log('🔍 Current users state:', users);
-	console.log('🔍 Current search term:', searchTerm);
+	const formatNumber = (num: number) => {
+		return new Intl.NumberFormat().format(num);
+	};
 
+	// Filter users based on search and filters
 	const filteredUsers = users.filter((user) => {
-		const searchLower = searchTerm.toLowerCase();
-		return (
-			user.username?.toLowerCase().includes(searchLower) ||
-			user.id?.toString().includes(searchLower) ||
-			user.tonWallet?.toLowerCase().includes(searchLower) ||
-			user.role?.toLowerCase().includes(searchLower)
-		);
+		const matchesSearch = user.username
+			.toLowerCase()
+			.includes(searchTerm.toLowerCase());
+		const matchesRole = filterRole === 'ALL' || user.role === filterRole;
+		const matchesStatus =
+			filterStatus === 'ALL' ||
+			(filterStatus === 'ACTIVE' && !user.blocked) ||
+			(filterStatus === 'BLOCKED' && user.blocked);
+
+		return matchesSearch && matchesRole && matchesStatus;
 	});
 
-	console.log('🔍 Filtered users:', filteredUsers);
-
+	// Show loading while authentication is being checked
 	if (authLoading) {
 		return (
 			<div className='flex items-center justify-center min-h-screen'>
@@ -154,6 +159,8 @@ export default function Users() {
 
 	return (
 		<div className='space-y-6'>
+			<TokenDebugger />
+
 			{/* Header */}
 			<div className='flex items-center justify-between'>
 				<div>
@@ -189,17 +196,64 @@ export default function Users() {
 				</div>
 			)}
 
-			{/* Search */}
+			{/* Filters */}
 			<div className='bg-gray-800 rounded-lg p-4'>
-				<div className='relative'>
-					<Search className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400' />
-					<input
-						type='text'
-						placeholder='Search users...'
-						value={searchTerm}
-						onChange={(e) => setSearchTerm(e.target.value)}
-						className='w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500'
-					/>
+				<div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
+					{/* Search */}
+					<div className='relative'>
+						<Search className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400' />
+						<input
+							type='text'
+							placeholder='Search users...'
+							value={searchTerm}
+							onChange={(e) => setSearchTerm(e.target.value)}
+							className='w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500'
+						/>
+					</div>
+
+					{/* Role Filter */}
+					<div>
+						<select
+							value={filterRole}
+							onChange={(e) =>
+								setFilterRole(
+									e.target.value as 'ALL' | 'USER' | 'SYSTEM'
+								)
+							}
+							className='w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500'
+							aria-label='Filter by role'>
+							<option value='ALL'>All Roles</option>
+							<option value='USER'>Users</option>
+							<option value='SYSTEM'>System</option>
+						</select>
+					</div>
+
+					{/* Status Filter */}
+					<div>
+						<select
+							value={filterStatus}
+							onChange={(e) =>
+								setFilterStatus(
+									e.target.value as
+										| 'ALL'
+										| 'ACTIVE'
+										| 'BLOCKED'
+								)
+							}
+							className='w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500'
+							aria-label='Filter by status'>
+							<option value='ALL'>All Status</option>
+							<option value='ACTIVE'>Active</option>
+							<option value='BLOCKED'>Blocked</option>
+						</select>
+					</div>
+
+					{/* Results Count */}
+					<div className='flex items-center justify-end text-gray-400'>
+						{loading
+							? 'Loading...'
+							: `${filteredUsers.length} users`}
+					</div>
 				</div>
 			</div>
 
@@ -216,7 +270,9 @@ export default function Users() {
 					<div className='flex flex-col items-center justify-center p-8 text-gray-400'>
 						<UsersIcon className='h-12 w-12 text-gray-500 mx-auto mb-4' />
 						<p className='text-lg font-medium'>No users found</p>
-						<p className='text-sm'>Try adjusting your search</p>
+						<p className='text-sm'>
+							Try adjusting your search or filters
+						</p>
 					</div>
 				) : (
 					<div className='divide-y divide-gray-700'>
@@ -230,8 +286,7 @@ export default function Users() {
 										<div className='flex items-center space-x-3 mb-2'>
 											<div className='flex items-center space-x-2'>
 												<h3 className='text-lg font-medium text-white'>
-													{user.username ||
-														'Unknown User'}
+													{user.username}
 												</h3>
 												<span
 													className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
@@ -251,6 +306,7 @@ export default function Users() {
 
 										{/* User Details */}
 										<div className='grid grid-cols-1 md:grid-cols-2 gap-4 text-sm'>
+											{/* Basic Info */}
 											<div>
 												<p className='text-gray-400'>
 													🆔 ID: {user.id}
@@ -273,7 +329,32 @@ export default function Users() {
 													</p>
 												)}
 											</div>
+
+											{/* Activity */}
 											<div>
+												{user.userState && (
+													<>
+														<p className='text-gray-400'>
+															🔥 Streak:{' '}
+															{
+																user.userState
+																	.currentStreak
+															}
+															/
+															{
+																user.userState
+																	.maxStreak
+															}
+														</p>
+														<p className='text-gray-400'>
+															📅 Last Login:{' '}
+															{formatDate(
+																user.userState
+																	.lastLoginDate
+															)}
+														</p>
+													</>
+												)}
 												{user.createdAt && (
 													<p className='text-gray-400'>
 														<Calendar className='h-3 w-3 inline mr-1' />
@@ -285,6 +366,36 @@ export default function Users() {
 												)}
 											</div>
 										</div>
+
+										{/* Chaos/Stability Levels */}
+										{user.userState && (
+											<div className='mt-3 grid grid-cols-3 gap-4 text-xs'>
+												<div>
+													<p className='text-gray-400'>
+														Chaos:{' '}
+														{user.userState.chaosLevel.toFixed(
+															2
+														)}
+													</p>
+												</div>
+												<div>
+													<p className='text-gray-400'>
+														Stability:{' '}
+														{user.userState.stabilityLevel.toFixed(
+															2
+														)}
+													</p>
+												</div>
+												<div>
+													<p className='text-gray-400'>
+														Entropy:{' '}
+														{user.userState.entropyVelocity.toFixed(
+															2
+														)}
+													</p>
+												</div>
+											</div>
+										)}
 									</div>
 
 									{/* Actions */}

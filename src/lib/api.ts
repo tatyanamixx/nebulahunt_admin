@@ -47,6 +47,64 @@ api.interceptors.response.use(
 		return response;
 	},
 	(error) => {
+		// Handle network errors and server unavailability
+		if (!error.response) {
+			// Network error - server is not reachable
+			console.error('🔐 Network Error - Server unavailable:', {
+				message: error.message,
+				url: error.config?.url,
+				code: error.code,
+			});
+
+			// Create a standardized error response
+			const networkError = {
+				response: {
+					status: 0,
+					statusText: 'Network Error',
+					data: {
+						message:
+							'Server unavailable. Please check your internet connection and try again.',
+						error: 'NETWORK_ERROR',
+						details: error.message,
+					},
+				},
+				config: error.config,
+				message: 'Network Error - Server unavailable',
+			};
+
+			return Promise.reject(networkError);
+		}
+
+		// Handle JSON parsing errors
+		if (
+			error.message &&
+			error.message.includes('Unexpected end of JSON input')
+		) {
+			console.error('🔐 JSON Parsing Error:', {
+				status: error.response?.status,
+				url: error.config?.url,
+				message: error.message,
+			});
+
+			const jsonError = {
+				response: {
+					status: error.response?.status || 500,
+					statusText:
+						error.response?.statusText || 'JSON Parse Error',
+					data: {
+						message:
+							'Server unavailable. Please check your internet connection and try again.',
+						error: 'JSON_PARSE_ERROR',
+						details: error.message,
+					},
+				},
+				config: error.config,
+				message: 'JSON parsing failed',
+			};
+
+			return Promise.reject(jsonError);
+		}
+
 		console.error('🔐 API Response Error:', {
 			status: error.response?.status,
 			url: error.config?.url,
@@ -414,5 +472,24 @@ api.interceptors.response.use(
 		return Promise.reject(error);
 	}
 );
+
+// Artifact Template API functions
+export const artifactTemplateApi = {
+	// Get all artifact templates
+	getAll: () => api.get('/artifact-templates'),
+
+	// Get artifact template by slug
+	getBySlug: (slug: string) => api.get(`/artifact-templates/${slug}`),
+
+	// Create artifact templates
+	create: (artifacts: any[]) => api.post('/artifact-templates', artifacts),
+
+	// Update artifact template
+	update: (artifact: any) =>
+		api.put(`/artifact-templates/${artifact.slug}`, artifact),
+
+	// Delete artifact template
+	delete: (slug: string) => api.delete(`/artifact-templates/${slug}`),
+};
 
 export { api };

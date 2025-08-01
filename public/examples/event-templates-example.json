@@ -1,0 +1,52 @@
+[
+	{
+		"slug": "test_event_1",
+		"name": "Test Event 1",
+		"description": {
+			"en": "A test event for validation",
+			"ru": "Тестовое событие для валидации"
+		},
+		"type": "RANDOM",
+		"triggerConfig": {
+			"probability": 0.1
+		},
+		"effect": {
+			"multipliers": {
+				"cps": 1.5
+			},
+			"duration": 300
+		},
+		"frequency": {
+			"interval": 3600
+		},
+		"conditions": {
+			"minLevel": 5
+		},
+		"active": true
+	},
+	{
+		"slug": "test_event_2",
+		"name": "Test Event 2",
+		"description": {
+			"en": "Another test event",
+			"ru": "Еще одно тестовое событие"
+		},
+		"type": "PERIODIC",
+		"triggerConfig": {
+			"interval": 1800
+		},
+		"effect": {
+			"multipliers": {
+				"cps": 2.0
+			},
+			"duration": 600
+		},
+		"frequency": {
+			"interval": 7200
+		},
+		"conditions": {
+			"minLevel": 10
+		},
+		"active": false
+	}
+]

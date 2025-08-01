@@ -29,7 +29,7 @@ interface AuthContextType {
 	user: User | null;
 	isAuthenticated: boolean;
 	// OAuth methods
-	loginWithGoogle: () => Promise<void>;
+	loginWithGoogle: (on2FARequired?: () => void) => Promise<void>;
 	// Password methods
 	login: () => Promise<void>;
 	// 2FA methods
@@ -103,6 +103,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				statusText: error.response?.statusText,
 				data: error.response?.data,
 			});
+
+			// Handle server unavailability
+			if (
+				error.response?.status === 0 ||
+				error.response?.data?.error === 'NETWORK_ERROR' ||
+				error.response?.data?.error === 'JSON_PARSE_ERROR' ||
+				error.message?.includes('HTTP 500') ||
+				error.message?.includes('Internal Server Error')
+			) {
+				console.error('Server unavailable during token refresh');
+				logout();
+				throw new Error('Server unavailable. Please try again later.');
+			}
+
 			// If token refresh failed, logout
 			logout();
 			throw error;
@@ -151,6 +165,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 							statusText: error.response?.statusText,
 							data: error.response?.data,
 						});
+
+						// Handle server unavailability
+						if (
+							error.response?.status === 0 ||
+							error.response?.data?.error === 'NETWORK_ERROR' ||
+							error.response?.data?.error === 'JSON_PARSE_ERROR'
+						) {
+							console.error('Server unavailable, logging out');
+							logout();
+							return;
+						}
+
 						// If server verification fails, try to refresh token
 						try {
 							console.log(
@@ -183,7 +209,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	}, []);
 
 	// Google OAuth login
-	const loginWithGoogle = async () => {
+	const loginWithGoogle = async (on2FARequired?: () => void) => {
 		try {
 			if (!window.google?.accounts?.oauth2) {
 				throw new Error('Google OAuth not available');
@@ -200,59 +226,109 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				client_id: clientId,
 				scope: 'email profile',
 				callback: async (response: any) => {
-					if (response.error) {
-						throw new Error(
-							`Google OAuth error: ${response.error}`
-						);
-					}
-
-					// Send token to server for verification
-					const serverResponse = await api.post(
-						'/admin/oauth/google',
-						{
-							accessToken: response.access_token,
+					try {
+						if (response.error) {
+							throw new Error(
+								`Google OAuth error: ${response.error}`
+							);
 						}
-					);
 
-					console.log(
-						'Google OAuth server response:',
-						serverResponse.data
-					);
-					console.log(
-						'🔐 Server response requires2FA:',
-						serverResponse.data.requires2FA
-					);
-
-					// If 2FA is required, save temporary data
-					if (serverResponse.data.requires2FA) {
-						const tempData = {
-							provider: 'google',
-							accessToken: response.access_token,
-							userData: serverResponse.data.userData,
-						};
-						console.log('🔐 Saving temp OAuth data:', tempData);
-						localStorage.setItem(
-							'tempOAuthData',
-							JSON.stringify(tempData)
+						// Send token to server for verification
+						const serverResponse = await api.post(
+							'/admin/oauth/google',
+							{
+								accessToken: response.access_token,
+							}
 						);
-						console.log('🔐 tempOAuthData saved to localStorage');
-						// Here you can show 2FA form
-						return;
-					}
 
-					// If 2FA is not required, authorize immediately
-					const { accessToken, refreshToken, ...userData } =
-						serverResponse.data;
-					localStorage.setItem('accessToken', accessToken);
-					localStorage.setItem('refreshToken', refreshToken);
-					setUser(userData);
+						console.log(
+							'Google OAuth server response:',
+							serverResponse.data
+						);
+						console.log(
+							'🔐 Server response requires2FA:',
+							serverResponse.data.requires2FA
+						);
+
+						// If 2FA is required, save temporary data
+						if (serverResponse.data.requires2FA) {
+							const tempData = {
+								provider: 'google',
+								accessToken: response.access_token,
+								userData: serverResponse.data.userData,
+							};
+							console.log('🔐 Saving temp OAuth data:', tempData);
+							localStorage.setItem(
+								'tempOAuthData',
+								JSON.stringify(tempData)
+							);
+							console.log(
+								'🔐 tempOAuthData saved to localStorage'
+							);
+							// Notify that 2FA is required
+							if (on2FARequired) {
+								on2FARequired();
+							}
+							return;
+						}
+
+						// If 2FA is not required, authorize immediately
+						const { accessToken, refreshToken, ...userData } =
+							serverResponse.data;
+						localStorage.setItem('accessToken', accessToken);
+						localStorage.setItem('refreshToken', refreshToken);
+						setUser(userData);
+					} catch (serverError: any) {
+						console.error(
+							'Google OAuth server error:',
+							serverError
+						);
+
+						// Handle server unavailability
+						if (
+							serverError.response?.status === 0 ||
+							serverError.response?.data?.error ===
+								'NETWORK_ERROR' ||
+							serverError.response?.data?.error ===
+								'JSON_PARSE_ERROR' ||
+							serverError.message?.includes('HTTP 500') ||
+							serverError.message?.includes(
+								'Internal Server Error'
+							)
+						) {
+							throw new Error(
+								'Server unavailable. Please try again later.'
+							);
+						}
+
+						// Handle specific server errors (like user not found, etc.)
+						if (serverError.response?.data?.message) {
+							throw new Error(serverError.response.data.message);
+						}
+
+						// Handle other server errors
+						throw new Error(
+							'Google authentication failed. Please try again.'
+						);
+					}
 				},
 			});
 
 			client.requestAccessToken();
-		} catch (error) {
+		} catch (error: any) {
 			console.error('Google OAuth error:', error);
-			throw error;
+
+			// Don't throw technical errors to the UI
+			if (
+				error.message?.includes('Server unavailable') ||
+				error.message?.includes('Network Error') ||
+				error.message?.includes('Failed to fetch')
+			) {
+				throw error; // Re-throw server errors as they're handled by the UI
+			}
+
+			// For other errors, provide a user-friendly message
+			throw new Error('Authentication failed. Please try again.');
 		}
 	};
 
@@ -341,8 +417,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			setUser(userData);
 		} catch (error: any) {
 			console.error('🔐 2FA verification error:', error);
-			console.error('🔐 Error response:', error.response?.data);
-			throw error;
+
+			// Handle server unavailability
+			if (
+				error.response?.status === 0 ||
+				error.response?.data?.error === 'NETWORK_ERROR' ||
+				error.response?.data?.error === 'JSON_PARSE_ERROR' ||
+				error.message?.includes('HTTP 500') ||
+				error.message?.includes('Internal Server Error')
+			) {
+				throw new Error('Server unavailable. Please try again later.');
+			}
+
+			// Handle specific server errors (like invalid OTP)
+			if (error.response?.data?.message) {
+				throw new Error(error.response.data.message);
+			}
+
+			// Handle other server errors
+			throw new Error('2FA verification failed. Please try again.');
 		}
 	};
 

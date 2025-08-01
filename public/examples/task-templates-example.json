@@ -1,0 +1,181 @@
+[
+	{
+		"slug": "daily-login",
+		"title": {
+			"en": "Daily Login",
+			"ru": "Ежедневный вход"
+		},
+		"description": {
+			"en": "Login to the game daily to receive rewards",
+			"ru": "Входите в игру ежедневно для получения наград"
+		},
+		"reward": {
+			"type": "stardust",
+			"amount": 100
+		},
+		"condition": {
+			"type": "daily_login",
+			"resetTime": "00:00"
+		},
+		"icon": "🌟",
+		"active": true,
+		"sortOrder": 1
+	},
+	{
+		"slug": "collect-stardust",
+		"title": {
+			"en": "Stardust Collector",
+			"ru": "Сборщик звездной пыли"
+		},
+		"description": {
+			"en": "Collect 1000 stardust particles",
+			"ru": "Соберите 1000 частиц звездной пыли"
+		},
+		"reward": {
+			"type": "darkMatter",
+			"amount": 50
+		},
+		"condition": {
+			"type": "resource_collection",
+			"resource": "stardust",
+			"amount": 1000
+		},
+		"icon": "💎",
+		"active": true,
+		"sortOrder": 2
+	},
+	{
+		"slug": "explore-galaxy",
+		"title": {
+			"en": "Galaxy Explorer",
+			"ru": "Исследователь галактики"
+		},
+		"description": {
+			"en": "Explore 5 different galaxies",
+			"ru": "Исследуйте 5 различных галактик"
+		},
+		"reward": {
+			"type": "stars",
+			"amount": 25
+		},
+		"condition": {
+			"type": "galaxy_exploration",
+			"count": 5
+		},
+		"icon": "🌌",
+		"active": true,
+		"sortOrder": 3
+	},
+	{
+		"slug": "complete-quests",
+		"title": {
+			"en": "Quest Master",
+			"ru": "Мастер квестов"
+		},
+		"description": {
+			"en": "Complete 10 quests in a single day",
+			"ru": "Выполните 10 квестов за один день"
+		},
+		"reward": {
+			"type": "tonToken",
+			"amount": 10
+		},
+		"condition": {
+			"type": "quest_completion",
+			"count": 10,
+			"timeframe": "daily"
+		},
+		"icon": "📋",
+		"active": true,
+		"sortOrder": 4
+	},
+	{
+		"slug": "upgrade-facility",
+		"title": {
+			"en": "Facility Upgrader",
+			"ru": "Улучшитель сооружений"
+		},
+		"description": {
+			"en": "Upgrade any facility to level 5",
+			"ru": "Улучшите любое сооружение до 5 уровня"
+		},
+		"reward": {
+			"type": "stardust",
+			"amount": 500
+		},
+		"condition": {
+			"type": "facility_upgrade",
+			"level": 5
+		},
+		"icon": "🏗️",
+		"active": true,
+		"sortOrder": 5
+	},
+	{
+		"slug": "market-trader",
+		"title": {
+			"en": "Market Trader",
+			"ru": "Торговец на рынке"
+		},
+		"description": {
+			"en": "Make 3 successful trades in the market",
+			"ru": "Совершите 3 успешные сделки на рынке"
+		},
+		"reward": {
+			"type": "darkMatter",
+			"amount": 100
+		},
+		"condition": {
+			"type": "market_trades",
+			"count": 3
+		},
+		"icon": "💰",
+		"active": true,
+		"sortOrder": 6
+	},
+	{
+		"slug": "artifact-hunter",
+		"title": {
+			"en": "Artifact Hunter",
+			"ru": "Охотник за артефактами"
+		},
+		"description": {
+			"en": "Discover 3 rare artifacts",
+			"ru": "Откройте 3 редких артефакта"
+		},
+		"reward": {
+			"type": "stars",
+			"amount": 50
+		},
+		"condition": {
+			"type": "artifact_discovery",
+			"rarity": "rare",
+			"count": 3
+		},
+		"icon": "🏺",
+		"active": true,
+		"sortOrder": 7
+	},
+	{
+		"slug": "streak-master",
+		"title": {
+			"en": "Streak Master",
+			"ru": "Мастер серий"
+		},
+		"description": {
+			"en": "Maintain a 7-day login streak",
+			"ru": "Поддерживайте 7-дневную серию входов"
+		},
+		"reward": {
+			"type": "tonToken",
+			"amount": 25
+		},
+		"condition": {
+			"type": "login_streak",
+			"days": 7
+		},
+		"icon": "🔥",
+		"active": true,
+		"sortOrder": 8
+	}
+]

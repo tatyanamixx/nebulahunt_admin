@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { isDevelopment } from '../lib/env';
+import { safeFetch, checkServerStatus } from '../lib/server-status';
+import ServerErrorAlert from '../components/ServerErrorAlert';
 
 export default function AdminLogin() {
 	const navigate = useNavigate();
@@ -30,6 +32,23 @@ export default function AdminLogin() {
 				: 'missing',
 		});
 
+		// Check server status on mount
+		const checkServer = async () => {
+			try {
+				const status = await checkServerStatus();
+				if (!status.isAvailable) {
+					setServerError(status.message || 'Server unavailable');
+				}
+			} catch (error) {
+				console.error('Server status check failed:', error);
+				setServerError(
+					'Server unavailable. Please check your internet connection and try again.'
+				);
+			}
+		};
+
+		checkServer();
+
 		// If already authenticated, redirect to dashboard
 		if (isAuthenticated) {
 			console.log('🔐 Already authenticated, redirecting to dashboard');
@@ -52,6 +71,7 @@ export default function AdminLogin() {
 	const [qrCode, setQrCode] = useState('');
 	const [google2faSecret, setGoogle2faSecret] = useState('');
 	const [showQRCode, setShowQRCode] = useState(false);
+	const [serverError, setServerError] = useState<string | null>(null);
 
 	// State for email/password form
 	const [email, setEmail] = useState('');
@@ -65,6 +85,7 @@ export default function AdminLogin() {
 
 	const showMessage = (text: string, isError = false) => {
 		setMessage(text);
+		setServerError(null); // Clear server error when showing new message
 		if (!isError) {
 			setTimeout(() => setMessage(''), 5000);
 		}
@@ -90,35 +111,34 @@ export default function AdminLogin() {
 		return () => clearInterval(interval);
 	}, []);
 
+	// Reset QR code when step changes to 2FA
+	useEffect(() => {
+		if (step === '2fa') {
+			// Reset QR code state when entering 2FA step
+			setShowQRCode(false);
+			setQrCode('');
+			setGoogle2faSecret('');
+		}
+	}, [step]);
+
 	const handleGoogleLogin = async () => {
 		setIsLoading(true);
 		try {
-			await loginWithGoogle();
-			// If loginWithGoogle didn't throw an error, 2FA is required
-			setStep('2fa');
+			await loginWithGoogle(() => {
+				// This callback is called when 2FA is required
+				setStep('2fa');
+				showMessage(
+					'Google authentication successful. Please enter 2FA code'
+				);
+			});
 
-			// Get QR code for 2FA
-			try {
-				const tempData = localStorage.getItem('tempOAuthData');
-				if (tempData) {
-					const { userData } = JSON.parse(tempData);
-					const response = await fetch(
-						`/api/admin/2fa/qr/${userData.email}`
-					);
-					if (response.ok) {
-						const qrData = await response.json();
-						setQrCode(qrData.otpAuthUrl);
-						setGoogle2faSecret(qrData.google2faSecret);
-						setShowQRCode(true);
-					}
-				}
-			} catch (qrError) {
-				console.error('Failed to get QR code:', qrError);
+			// Check if user was authenticated without 2FA
+			const tempData = localStorage.getItem('tempOAuthData');
+			if (!tempData) {
+				// No 2FA required, user should be authenticated
+				showMessage('Login successful');
+				navigate('/dashboard');
 			}
-
-			showMessage(
-				'Google authentication successful. Please enter 2FA code'
-			);
 		} catch (error: any) {
 			console.error('Google login error:', error);
 			let message =
@@ -130,6 +150,18 @@ export default function AdminLogin() {
 			if (message.includes('Google OAuth Client ID not configured')) {
 				message =
 					'Google OAuth not configured. Follow instructions in GOOGLE_OAUTH_SETUP_CLIENT.md';
+			}
+
+			// Handle server unavailability specifically
+			if (
+				error.response?.status === 0 ||
+				error.response?.data?.error === 'NETWORK_ERROR' ||
+				error.response?.data?.error === 'JSON_PARSE_ERROR'
+			) {
+				setServerError(
+					'Server unavailable. Please check your internet connection and try again.'
+				);
+				return;
 			}
 
 			showMessage(message, true);
@@ -169,8 +201,24 @@ export default function AdminLogin() {
 			navigate('/dashboard');
 		} catch (error: any) {
 			console.error('🔐 handle2FAVerification error:', error);
+
+			// Handle server unavailability specifically
+			if (
+				error.response?.status === 0 ||
+				error.response?.data?.error === 'NETWORK_ERROR' ||
+				error.response?.data?.error === 'JSON_PARSE_ERROR' ||
+				error.message?.includes('HTTP 500') ||
+				error.message?.includes('Internal Server Error')
+			) {
+				setServerError(
+					'Server unavailable. Please check your internet connection and try again.'
+				);
+				return;
+			}
+
+			// Show the actual error message from the server or a generic one
 			const message =
-				error.response?.data?.message || '2FA verification error';
+				error.message || '2FA verification failed. Please try again.';
 			showMessage(message, true);
 		} finally {
 			setIsLoading(false);
@@ -191,21 +239,21 @@ export default function AdminLogin() {
 				email,
 				hasPassword: !!password,
 			});
-			const response = await fetch('/api/admin/login/password', {
+
+			const result = await safeFetch('/api/admin/login/password', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
 				},
 				body: JSON.stringify({ email, password }),
 			});
-			console.log('🔐 Ответ получен:', response.status);
 
-			const data = await response.json();
-			console.log('🔐 Данные ответа:', data);
-
-			if (!response.ok) {
-				throw new Error(data.message || 'Login error');
+			if (!result.ok) {
+				throw new Error(result.error || 'Login error');
 			}
+
+			const data = result.data;
+			console.log('🔐 Данные ответа:', data);
 
 			// Проверяем, требуется ли 2FA
 			if (data.requires2FA) {
@@ -236,11 +284,27 @@ export default function AdminLogin() {
 
 			// Перенаправляем на дашборд
 			navigate('/dashboard');
-		} catch (err) {
+		} catch (err: any) {
 			console.log('🔐 Ошибка:', err);
-			setMessage(
-				err instanceof Error ? err.message : 'An error occurred'
-			);
+
+			// Handle server unavailability specifically
+			if (
+				err.response?.status === 0 ||
+				err.response?.data?.error === 'NETWORK_ERROR' ||
+				err.response?.data?.error === 'JSON_PARSE_ERROR' ||
+				err.message?.includes('Failed to fetch') ||
+				err.message?.includes('Network Error') ||
+				err.message?.includes('HTTP 500') ||
+				err.message?.includes('Internal Server Error')
+			) {
+				setServerError(
+					'Server unavailable. Please check your internet connection and try again.'
+				);
+				return;
+			}
+
+			// For other errors, show a generic message
+			setMessage('Login failed. Please try again.');
 		} finally {
 			console.log('🔐 Завершение handlePasswordLogin');
 			setPasswordLoading(false);
@@ -264,7 +328,7 @@ export default function AdminLogin() {
 
 			const passwordData = JSON.parse(tempPasswordData);
 
-			const response = await fetch(
+			const result = await safeFetch(
 				'/api/admin/login/password/2fa/verify',
 				{
 					method: 'POST',
@@ -278,11 +342,11 @@ export default function AdminLogin() {
 				}
 			);
 
-			const data = await response.json();
-
-			if (!response.ok) {
-				throw new Error(data.message || '2FA verification failed');
+			if (!result.ok) {
+				throw new Error(result.error || '2FA verification error');
 			}
+
+			const data = result.data;
 
 			// Сохраняем токены
 			localStorage.setItem('accessToken', data.accessToken);
@@ -297,8 +361,25 @@ export default function AdminLogin() {
 			showMessage('Login successful! Redirecting...');
 			setTimeout(() => navigate('/dashboard'), 1000);
 		} catch (error: any) {
-			const message =
-				error.response?.data?.message || '2FA verification failed';
+			let message =
+				error.response?.data?.message ||
+				error.message ||
+				'2FA verification failed';
+
+			// Handle server unavailability specifically
+			if (
+				error.response?.status === 0 ||
+				error.response?.data?.error === 'NETWORK_ERROR' ||
+				error.response?.data?.error === 'JSON_PARSE_ERROR' ||
+				error.message?.includes('Failed to fetch') ||
+				error.message?.includes('Network Error')
+			) {
+				setServerError(
+					'Server unavailable. Please check your internet connection and try again.'
+				);
+				return;
+			}
+
 			showMessage(message, true);
 		} finally {
 			setIsLoading(false);
@@ -346,7 +427,15 @@ export default function AdminLogin() {
 					)}
 				</div>
 
-				{message && (
+				{serverError && (
+					<ServerErrorAlert
+						message={serverError}
+						onRetry={() => setServerError(null)}
+						className='mb-4'
+					/>
+				)}
+
+				{message && !serverError && (
 					<div
 						className={`p-4 rounded-md ${
 							message.includes('error') ||
@@ -470,45 +559,114 @@ export default function AdminLogin() {
 								</h3>
 
 								<div className='space-y-4'>
-									<div>
-										<label className='block text-sm font-medium text-gray-300 mb-2'>
-											QR Code for scanning:
-										</label>
-										<div className='flex justify-center'>
-											<img
-												src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-													qrCode
-												)}`}
-												alt='QR Code'
-												className='border border-gray-600 rounded'
-											/>
-										</div>
-									</div>
+									{showQRCode ? (
+										<div>
+											<div className='flex justify-between items-center mb-2'>
+												<label className='block text-sm font-medium text-gray-300'>
+													QR Code for scanning:
+												</label>
+												<button
+													type='button'
+													onClick={() =>
+														setShowQRCode(false)
+													}
+													className='text-sm text-gray-400 hover:text-gray-300'>
+													Hide QR Code
+												</button>
+											</div>
+											<div className='flex justify-center'>
+												<img
+													src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
+														qrCode
+													)}`}
+													alt='QR Code'
+													className='border border-gray-600 rounded'
+												/>
+											</div>
 
-									<div>
-										<label className='block text-sm font-medium text-gray-300 mb-2'>
-											Secret for manual entry:
-										</label>
-										<div className='flex items-center space-x-2'>
-											<input
-												type='text'
-												value={google2faSecret}
-												readOnly
-												aria-label='Google 2FA secret key'
-												className='flex-1 px-3 py-2 border border-gray-600 bg-gray-700 text-white text-sm font-mono rounded-md'
-											/>
-											<button
-												onClick={() =>
-													navigator.clipboard.writeText(
-														google2faSecret
-													)
-												}
-												className='px-3 py-2 text-sm border border-gray-600 bg-gray-700 text-gray-300 rounded-md hover:bg-gray-600'
-												aria-label='Copy secret to clipboard'>
-												Copy
-											</button>
+											<div>
+												<label className='block text-sm font-medium text-gray-300 mb-2'>
+													Secret for manual entry:
+												</label>
+												<div className='flex items-center space-x-2'>
+													<input
+														type='text'
+														value={google2faSecret}
+														readOnly
+														aria-label='Google 2FA secret key'
+														className='flex-1 px-3 py-2 border border-gray-600 bg-gray-700 text-white text-sm font-mono rounded-md'
+													/>
+													<button
+														onClick={() =>
+															navigator.clipboard.writeText(
+																google2faSecret
+															)
+														}
+														className='px-3 py-2 text-sm border border-gray-600 bg-gray-700 text-gray-300 rounded-md hover:bg-gray-600'
+														aria-label='Copy secret to clipboard'>
+														Copy
+													</button>
+												</div>
+											</div>
 										</div>
-									</div>
+									) : (
+										<div className='bg-gray-800 p-4 rounded-lg border border-gray-700'>
+											<div className='text-center'>
+												<p className='text-gray-300 mb-3'>
+													Need to scan QR code in
+													Google Authenticator?
+												</p>
+												<button
+													type='button'
+													onClick={async () => {
+														try {
+															const tempData =
+																localStorage.getItem(
+																	'tempOAuthData'
+																);
+															if (tempData) {
+																const {
+																	userData,
+																} =
+																	JSON.parse(
+																		tempData
+																	);
+																const result =
+																	await safeFetch(
+																		`/api/admin/2fa/qr/${userData.email}`
+																	);
+																if (
+																	result.ok &&
+																	result.data
+																) {
+																	setQrCode(
+																		result
+																			.data
+																			.otpAuthUrl
+																	);
+																	setGoogle2faSecret(
+																		result
+																			.data
+																			.google2faSecret
+																	);
+																	setShowQRCode(
+																		true
+																	);
+																}
+															}
+														} catch (error) {
+															console.error(
+																'Failed to get QR code:',
+																error
+															);
+														}
+													}}
+													className='px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700'>
+													Show QR Code
+												</button>
+											</div>
+										</div>
+									)}
 
 									<div className='bg-blue-900 p-4 rounded-md border border-blue-700'>
 										<h4 className='text-sm font-medium text-blue-200 mb-2'>

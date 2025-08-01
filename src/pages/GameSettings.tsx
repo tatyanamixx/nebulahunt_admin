@@ -10,6 +10,12 @@ import {
 	Shield,
 	DollarSign,
 } from 'lucide-react';
+import TaskTemplatesTab from '../components/TaskTemplatesTab';
+import PackageTemplatesTab from '../components/PackageTemplatesTab';
+import UpgradeTemplatesTab from '../components/UpgradeTemplatesTab';
+import CommissionTemplatesTab from '../components/CommissionTemplatesTab';
+import ArtifactTemplatesTab from '../components/ArtifactTemplatesTab';
+import EventTemplatesTab from '../components/EventTemplatesTab';
 
 type TabType =
 	| 'artifacts'
@@ -142,209 +148,15 @@ export default function GameSettings() {
 
 					{/* Tab Components */}
 					<div className='min-h-[400px]'>
-						{activeTab === 'artifacts' && (
-							<div className='bg-gray-750 rounded-lg p-6 border border-gray-700'>
-								<div className='flex items-center space-x-3 mb-4'>
-									<Package className='h-6 w-6 text-blue-400' />
-									<h3 className='text-lg font-medium text-white'>
-										Artifact Templates
-									</h3>
-								</div>
-								<p className='text-gray-400 mb-4'>
-									Manage artifact templates that players can
-									discover and collect in the game.
-								</p>
-								<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-									<div className='bg-gray-700 rounded-lg p-4 border border-gray-600'>
-										<h4 className='font-medium text-white mb-2'>
-											Create Template
-										</h4>
-										<p className='text-sm text-gray-400'>
-											Add new artifact template
-										</p>
-									</div>
-									<div className='bg-gray-700 rounded-lg p-4 border border-gray-600'>
-										<h4 className='font-medium text-white mb-2'>
-											List Templates
-										</h4>
-										<p className='text-sm text-gray-400'>
-											View all artifact templates
-										</p>
-									</div>
-									<div className='bg-gray-700 rounded-lg p-4 border border-gray-600'>
-										<h4 className='font-medium text-white mb-2'>
-											Edit Template
-										</h4>
-										<p className='text-sm text-gray-400'>
-											Modify existing templates
-										</p>
-									</div>
-								</div>
-							</div>
-						)}
+						{activeTab === 'artifacts' && <ArtifactTemplatesTab />}
 
-						{activeTab === 'events' && (
-							<div className='bg-gray-750 rounded-lg p-6 border border-gray-700'>
-								<div className='flex items-center space-x-3 mb-4'>
-									<Star className='h-6 w-6 text-yellow-400' />
-									<h3 className='text-lg font-medium text-white'>
-										Event Templates
-									</h3>
-								</div>
-								<p className='text-gray-400 mb-4'>
-									Configure special events that can occur
-									during gameplay.
-								</p>
-								<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-									<div className='bg-gray-700 rounded-lg p-4 border border-gray-600'>
-										<h4 className='font-medium text-white mb-2'>
-											Create Event
-										</h4>
-										<p className='text-sm text-gray-400'>
-											Add new event template
-										</p>
-									</div>
-									<div className='bg-gray-700 rounded-lg p-4 border border-gray-600'>
-										<h4 className='font-medium text-white mb-2'>
-											List Events
-										</h4>
-										<p className='text-sm text-gray-400'>
-											View all event templates
-										</p>
-									</div>
-									<div className='bg-gray-700 rounded-lg p-4 border border-gray-600'>
-										<h4 className='font-medium text-white mb-2'>
-											Schedule Events
-										</h4>
-										<p className='text-sm text-gray-400'>
-											Set event timing
-										</p>
-									</div>
-								</div>
-							</div>
-						)}
+						{activeTab === 'events' && <EventTemplatesTab />}
 
-						{activeTab === 'packages' && (
-							<div className='bg-gray-750 rounded-lg p-6 border border-gray-700'>
-								<div className='flex items-center space-x-3 mb-4'>
-									<Package className='h-6 w-6 text-green-400' />
-									<h3 className='text-lg font-medium text-white'>
-										Package Templates
-									</h3>
-								</div>
-								<p className='text-gray-400 mb-4'>
-									Manage package templates for the in-game
-									store.
-								</p>
-								<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-									<div className='bg-gray-700 rounded-lg p-4 border border-gray-600'>
-										<h4 className='font-medium text-white mb-2'>
-											Create Package
-										</h4>
-										<p className='text-sm text-gray-400'>
-											Add new package template
-										</p>
-									</div>
-									<div className='bg-gray-700 rounded-lg p-4 border border-gray-600'>
-										<h4 className='font-medium text-white mb-2'>
-											List Packages
-										</h4>
-										<p className='text-sm text-gray-400'>
-											View all package templates
-										</p>
-									</div>
-									<div className='bg-gray-700 rounded-lg p-4 border border-gray-600'>
-										<h4 className='font-medium text-white mb-2'>
-											Pricing
-										</h4>
-										<p className='text-sm text-gray-400'>
-											Manage package prices
-										</p>
-									</div>
-								</div>
-							</div>
-						)}
+						{activeTab === 'packages' && <PackageTemplatesTab />}
 
-						{activeTab === 'upgrades' && (
-							<div className='bg-gray-750 rounded-lg p-6 border border-gray-700'>
-								<div className='flex items-center space-x-3 mb-4'>
-									<Zap className='h-6 w-6 text-purple-400' />
-									<h3 className='text-lg font-medium text-white'>
-										Upgrade Templates
-									</h3>
-								</div>
-								<p className='text-gray-400 mb-4'>
-									Configure player upgrades and progression
-									systems.
-								</p>
-								<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-									<div className='bg-gray-700 rounded-lg p-4 border border-gray-600'>
-										<h4 className='font-medium text-white mb-2'>
-											Create Upgrade
-										</h4>
-										<p className='text-sm text-gray-400'>
-											Add new upgrade template
-										</p>
-									</div>
-									<div className='bg-gray-700 rounded-lg p-4 border border-gray-600'>
-										<h4 className='font-medium text-white mb-2'>
-											List Upgrades
-										</h4>
-										<p className='text-sm text-gray-400'>
-											View all upgrade templates
-										</p>
-									</div>
-									<div className='bg-gray-700 rounded-lg p-4 border border-gray-600'>
-										<h4 className='font-medium text-white mb-2'>
-											Requirements
-										</h4>
-										<p className='text-sm text-gray-400'>
-											Set upgrade requirements
-										</p>
-									</div>
-								</div>
-							</div>
-						)}
+						{activeTab === 'upgrades' && <UpgradeTemplatesTab />}
 
-						{activeTab === 'tasks' && (
-							<div className='bg-gray-750 rounded-lg p-6 border border-gray-700'>
-								<div className='flex items-center space-x-3 mb-4'>
-									<Target className='h-6 w-6 text-red-400' />
-									<h3 className='text-lg font-medium text-white'>
-										Task Templates
-									</h3>
-								</div>
-								<p className='text-gray-400 mb-4'>
-									Manage quest and task templates for players.
-								</p>
-								<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-									<div className='bg-gray-700 rounded-lg p-4 border border-gray-600'>
-										<h4 className='font-medium text-white mb-2'>
-											Create Task
-										</h4>
-										<p className='text-sm text-gray-400'>
-											Add new task template
-										</p>
-									</div>
-									<div className='bg-gray-700 rounded-lg p-4 border border-gray-600'>
-										<h4 className='font-medium text-white mb-2'>
-											List Tasks
-										</h4>
-										<p className='text-sm text-gray-400'>
-											View all task templates
-										</p>
-									</div>
-									<div className='bg-gray-700 rounded-lg p-4 border border-gray-600'>
-										<h4 className='font-medium text-white mb-2'>
-											Rewards
-										</h4>
-										<p className='text-sm text-gray-400'>
-											Configure task rewards
-										</p>
-									</div>
-								</div>
-							</div>
-						)}
+						{activeTab === 'tasks' && <TaskTemplatesTab />}
 
 						{activeTab === 'galaxies' && (
 							<div className='bg-gray-750 rounded-lg p-6 border border-gray-700'>
@@ -388,69 +200,7 @@ export default function GameSettings() {
 						)}
 
 						{activeTab === 'commissions' && (
-							<div className='bg-gray-750 rounded-lg p-6 border border-gray-700'>
-								<div className='flex items-center space-x-3 mb-4'>
-									<DollarSign className='h-6 w-6 text-green-400' />
-									<h3 className='text-lg font-medium text-white'>
-										Commission Settings
-									</h3>
-								</div>
-								<p className='text-gray-400 mb-4'>
-									Configure commission rates and fee
-									structures for the game economy.
-								</p>
-								<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-									<div className='bg-gray-700 rounded-lg p-4 border border-gray-600'>
-										<h4 className='font-medium text-white mb-2'>
-											Transaction Fees
-										</h4>
-										<p className='text-sm text-gray-400'>
-											Set commission rates for
-											transactions
-										</p>
-									</div>
-									<div className='bg-gray-700 rounded-lg p-4 border border-gray-600'>
-										<h4 className='font-medium text-white mb-2'>
-											Market Fees
-										</h4>
-										<p className='text-sm text-gray-400'>
-											Configure marketplace commission
-										</p>
-									</div>
-									<div className='bg-gray-700 rounded-lg p-4 border border-gray-600'>
-										<h4 className='font-medium text-white mb-2'>
-											Referral Rewards
-										</h4>
-										<p className='text-sm text-gray-400'>
-											Set referral commission rates
-										</p>
-									</div>
-									<div className='bg-gray-700 rounded-lg p-4 border border-gray-600'>
-										<h4 className='font-medium text-white mb-2'>
-											Withdrawal Fees
-										</h4>
-										<p className='text-sm text-gray-400'>
-											Configure withdrawal commission
-										</p>
-									</div>
-									<div className='bg-gray-700 rounded-lg p-4 border border-gray-600'>
-										<h4 className='font-medium text-white mb-2'>
-											Premium Features
-										</h4>
-										<p className='text-sm text-gray-400'>
-											Set fees for premium features
-										</p>
-									</div>
-									<div className='bg-gray-700 rounded-lg p-4 border border-gray-600'>
-										<h4 className='font-medium text-white mb-2'>
-											Fee History
-										</h4>
-										<p className='text-sm text-gray-400'>
-											View commission change history
-										</p>
-									</div>
-								</div>
-							</div>
+							<CommissionTemplatesTab />
 						)}
 					</div>
 				</div>

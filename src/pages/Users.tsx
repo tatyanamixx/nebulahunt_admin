@@ -9,6 +9,12 @@ import {
 	RefreshCw,
 	Calendar,
 	Wallet,
+	User,
+	RefreshCw as RefreshIcon,
+	Hash,
+	Star,
+	Gem,
+	Zap,
 } from 'lucide-react';
 
 interface User {
@@ -19,6 +25,21 @@ interface User {
 	tonWallet?: string;
 	referral?: number;
 	createdAt?: string;
+	updatedAt?: string;
+	lastLoginAt?: string;
+	userState?: {
+		stardust: number;
+		darkMatter: number;
+		stars: number;
+		tgStars: number;
+		tonToken: number;
+		lastLoginDate?: string;
+		currentStreak: number;
+		maxStreak: number;
+		chaosLevel: number;
+		stabilityLevel: number;
+		entropyVelocity: number;
+	};
 }
 
 export default function Users() {
@@ -43,14 +64,14 @@ export default function Users() {
 			setLoading(true);
 			const response = await api.get('/admin-users/users');
 			console.log('🔍 Users response:', response.data);
-			console.log('🔍 Users array length:', response.data?.length);
-			console.log('🔍 Users array:', response.data);
-			// Convert Sequelize objects to plain objects
-			const plainUsers =
-				response.data?.map((user: any) => user.dataValues || user) ||
-				[];
-			console.log('🔍 Plain users:', plainUsers);
-			setUsers(plainUsers);
+			console.log('🔍 Users data:', response.data?.data);
+			console.log('🔍 Users count:', response.data?.count);
+
+			// Extract users from the new response structure
+			const users = response.data?.data || [];
+			console.log('🔍 Users array:', users);
+
+			setUsers(users);
 		} catch (error: any) {
 			console.error('❌ Error fetching users:', error);
 			console.error('❌ Error details:', {
@@ -84,11 +105,23 @@ export default function Users() {
 			);
 			console.log('🔍 Block toggle response:', response.data);
 
-			setUsers((prevUsers) =>
-				prevUsers.map((user) =>
-					user.id === userId ? { ...user, blocked: !blocked } : user
-				)
-			);
+			// Update local state with the returned user data
+			if (response.data?.success && response.data?.data) {
+				setUsers((prevUsers) =>
+					prevUsers.map((user) =>
+						user.id === userId ? response.data.data : user
+					)
+				);
+			} else {
+				// Fallback to simple toggle if no data returned
+				setUsers((prevUsers) =>
+					prevUsers.map((user) =>
+						user.id === userId
+							? { ...user, blocked: !blocked }
+							: user
+					)
+				);
+			}
 
 			showMessage(
 				`User ${blocked ? 'unblocked' : 'blocked'} successfully`,
@@ -121,7 +154,48 @@ export default function Users() {
 
 	const formatDate = (dateString?: string) => {
 		if (!dateString) return 'N/A';
-		return new Date(dateString).toLocaleDateString();
+
+		try {
+			const date = new Date(dateString);
+			// Check if the date is valid
+			if (isNaN(date.getTime())) {
+				return 'Invalid Date';
+			}
+			return date.toLocaleDateString('en-US', {
+				year: 'numeric',
+				month: 'short',
+				day: 'numeric',
+				hour: '2-digit',
+				minute: '2-digit',
+			});
+		} catch (error) {
+			console.error('Error formatting date:', dateString, error);
+			return 'Invalid Date';
+		}
+	};
+
+	const formatLastLogin = (dateString?: string) => {
+		if (!dateString) return 'Never';
+
+		try {
+			const date = new Date(dateString);
+			// Check if the date is valid
+			if (isNaN(date.getTime())) {
+				return 'Never';
+			}
+			return date.toLocaleDateString('en-US', {
+				year: 'numeric',
+				month: 'short',
+				day: 'numeric',
+			});
+		} catch (error) {
+			console.error(
+				'Error formatting last login date:',
+				dateString,
+				error
+			);
+			return 'Never';
+		}
 	};
 
 	console.log('🔍 Current users state:', users);
@@ -251,37 +325,92 @@ export default function Users() {
 
 										{/* User Details */}
 										<div className='grid grid-cols-1 md:grid-cols-2 gap-4 text-sm'>
-											<div>
-												<p className='text-gray-400'>
-													🆔 ID: {user.id}
-												</p>
+											<div className='space-y-2'>
+												<div className='flex items-center text-gray-400'>
+													<Hash className='h-4 w-4 mr-2 flex-shrink-0' />
+													<span>ID: {user.id}</span>
+												</div>
 												{user.tonWallet && (
-													<p className='text-gray-400'>
-														<Wallet className='h-3 w-3 inline mr-1' />
-														Wallet:{' '}
-														{user.tonWallet.substring(
-															0,
-															8
-														)}
-														...
-													</p>
+													<div className='flex items-center text-gray-400'>
+														<Wallet className='h-4 w-4 mr-2 flex-shrink-0' />
+														<span>
+															Wallet:{' '}
+															{user.tonWallet.substring(
+																0,
+																8
+															)}
+															...
+														</span>
+													</div>
 												)}
 												{user.referral && (
-													<p className='text-gray-400'>
-														👥 Referral:{' '}
-														{user.referral}
-													</p>
+													<div className='flex items-center text-gray-400'>
+														<UsersIcon className='h-4 w-4 mr-2 flex-shrink-0' />
+														<span>
+															Referral:{' '}
+															{user.referral}
+														</span>
+													</div>
+												)}
+												{user.userState && (
+													<div className='mt-3 space-y-1'>
+														<div className='flex items-center text-gray-400 text-xs'>
+															<Star className='h-3 w-3 mr-2 flex-shrink-0' />
+															<span>
+																Stars:{' '}
+																{user.userState.stars.toLocaleString()}
+															</span>
+														</div>
+														<div className='flex items-center text-gray-400 text-xs'>
+															<Gem className='h-3 w-3 mr-2 flex-shrink-0' />
+															<span>
+																Stardust:{' '}
+																{user.userState.stardust.toLocaleString()}
+															</span>
+														</div>
+														<div className='flex items-center text-gray-400 text-xs'>
+															<Zap className='h-3 w-3 mr-2 flex-shrink-0' />
+															<span>
+																Dark Matter:{' '}
+																{user.userState.darkMatter.toLocaleString()}
+															</span>
+														</div>
+													</div>
 												)}
 											</div>
-											<div>
+											<div className='space-y-2'>
 												{user.createdAt && (
-													<p className='text-gray-400'>
-														<Calendar className='h-3 w-3 inline mr-1' />
-														Created:{' '}
-														{formatDate(
-															user.createdAt
-														)}
-													</p>
+													<div className='flex items-center text-gray-400'>
+														<Calendar className='h-4 w-4 mr-2 flex-shrink-0' />
+														<span>
+															Created:{' '}
+															{formatDate(
+																user.createdAt
+															)}
+														</span>
+													</div>
+												)}
+												{user.lastLoginAt && (
+													<div className='flex items-center text-gray-400'>
+														<User className='h-4 w-4 mr-2 flex-shrink-0' />
+														<span>
+															Last Login:{' '}
+															{formatLastLogin(
+																user.lastLoginAt
+															)}
+														</span>
+													</div>
+												)}
+												{user.updatedAt && (
+													<div className='flex items-center text-gray-400'>
+														<RefreshIcon className='h-4 w-4 mr-2 flex-shrink-0' />
+														<span>
+															Updated:{' '}
+															{formatDate(
+																user.updatedAt
+															)}
+														</span>
+													</div>
 												)}
 											</div>
 										</div>

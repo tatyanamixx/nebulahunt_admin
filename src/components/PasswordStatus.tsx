@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import React, { useState, useEffect } from "react";
+import { safeFetch } from "../lib/server-status";
+import { useAuth } from "../contexts/AuthContext";
 
 interface PasswordInfo {
 	hasPassword: boolean;
@@ -25,20 +26,17 @@ export default function PasswordStatus() {
 
 		setLoading(true);
 		try {
-			const response = await fetch('/api/admin/password/info', {
+			const result = await safeFetch("/api/admin/password/info", {
 				headers: {
-					Authorization: `Bearer ${localStorage.getItem(
-						'accessToken'
-					)}`,
+					Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
 				},
 			});
 
-			if (response.ok) {
-				const data = await response.json();
-				setPasswordInfo(data);
+			if (result.ok) {
+				setPasswordInfo(result.data);
 			}
 		} catch (err) {
-			console.error('Failed to fetch password info:', err);
+			console.error("Failed to fetch password info:", err);
 		} finally {
 			setLoading(false);
 		}
@@ -58,7 +56,7 @@ export default function PasswordStatus() {
 	// Если пароль истек, показываем критическое предупреждение
 	if (passwordInfo.passwordWarning && passwordInfo.passwordDaysLeft === 0) {
 		return (
-			<div className='bg-red-600 text-white px-3 py-1 rounded-md text-sm font-medium'>
+			<div className="bg-red-600 text-white px-3 py-1 rounded-md text-sm font-medium">
 				⚠️ Пароль истек
 			</div>
 		);
@@ -71,7 +69,7 @@ export default function PasswordStatus() {
 		passwordInfo.passwordDaysLeft <= 7
 	) {
 		return (
-			<div className='bg-yellow-600 text-white px-3 py-1 rounded-md text-sm font-medium'>
+			<div className="bg-yellow-600 text-white px-3 py-1 rounded-md text-sm font-medium">
 				⏰ Пароль истечет через {passwordInfo.passwordDaysLeft} дн.
 			</div>
 		);
@@ -80,7 +78,7 @@ export default function PasswordStatus() {
 	// Если аккаунт заблокирован
 	if (passwordInfo.isLocked) {
 		return (
-			<div className='bg-red-600 text-white px-3 py-1 rounded-md text-sm font-medium'>
+			<div className="bg-red-600 text-white px-3 py-1 rounded-md text-sm font-medium">
 				🔒 Аккаунт заблокирован ({passwordInfo.lockMinutesLeft} мин.)
 			</div>
 		);
@@ -89,7 +87,7 @@ export default function PasswordStatus() {
 	// Если есть неудачные попытки входа
 	if (passwordInfo.loginAttempts > 0) {
 		return (
-			<div className='bg-orange-600 text-white px-3 py-1 rounded-md text-sm font-medium'>
+			<div className="bg-orange-600 text-white px-3 py-1 rounded-md text-sm font-medium">
 				⚠️ {passwordInfo.loginAttempts} неудачных попыток
 			</div>
 		);

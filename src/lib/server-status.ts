@@ -13,10 +13,17 @@ export interface ServerStatus {
  */
 export async function checkServerStatus(): Promise<ServerStatus> {
 	try {
-		const response = await fetch('/health', {
-			method: 'GET',
+		// Use the correct API URL from environment
+		const apiUrl = import.meta.env.VITE_API_URL || "/api";
+		const baseUrl = apiUrl.replace("/api", ""); // Remove /api to get base URL
+		const healthUrl = `${baseUrl}/health`;
+
+		console.log("🔍 Debug: Checking server status at:", healthUrl);
+
+		const response = await fetch(healthUrl, {
+			method: "GET",
 			headers: {
-				'Content-Type': 'application/json',
+				"Content-Type": "application/json",
 			},
 			// Short timeout to avoid hanging
 			signal: AbortSignal.timeout(5000),
@@ -25,40 +32,40 @@ export async function checkServerStatus(): Promise<ServerStatus> {
 		if (response.ok) {
 			return {
 				isAvailable: true,
-				message: 'Server is available',
+				message: "Server is available",
 			};
 		} else {
 			return {
 				isAvailable: false,
 				message:
-					'Server unavailable. Please check your internet connection and try again.',
+					"Server unavailable. Please check your internet connection and try again.",
 				error: `HTTP ${response.status}`,
 			};
 		}
 	} catch (error: any) {
-		console.error('Server status check failed:', error);
+		console.error("Server status check failed:", error);
 
 		// Handle different types of network errors
-		if (error.name === 'AbortError') {
+		if (error.name === "AbortError") {
 			return {
 				isAvailable: false,
-				message: 'Server not responding (timeout)',
-				error: 'TIMEOUT',
+				message: "Server not responding (timeout)",
+				error: "TIMEOUT",
 			};
 		}
 
-		if (error.name === 'TypeError' && error.message.includes('fetch')) {
+		if (error.name === "TypeError" && error.message.includes("fetch")) {
 			return {
 				isAvailable: false,
-				message: 'Server unavailable. Check your internet connection.',
-				error: 'NETWORK_ERROR',
+				message: "Server unavailable. Check your internet connection.",
+				error: "NETWORK_ERROR",
 			};
 		}
 
 		return {
 			isAvailable: false,
-			message: 'Error connecting to server',
-			error: error.message || 'UNKNOWN_ERROR',
+			message: "Error connecting to server",
+			error: error.message || "UNKNOWN_ERROR",
 		};
 	}
 }
@@ -70,7 +77,7 @@ export function safeJsonParse(text: string, fallback: any = null): any {
 	try {
 		return JSON.parse(text);
 	} catch (error) {
-		console.error('JSON parsing failed:', error);
+		console.error("JSON parsing failed:", error);
 		return fallback;
 	}
 }
@@ -83,7 +90,30 @@ export async function safeFetch(
 	options: RequestInit = {}
 ): Promise<{ ok: boolean; data?: any; error?: string }> {
 	try {
-		const response = await fetch(url, {
+		// Use the correct API URL from environment
+		const apiUrl = import.meta.env.VITE_API_URL || "/api";
+
+		// If URL already starts with /api, use it directly with the base URL
+		// If URL doesn't start with /api, add it
+		let fullUrl;
+		if (url.startsWith("http")) {
+			fullUrl = url;
+		} else if (url.startsWith("/api")) {
+			// URL already has /api, so use base URL + URL
+			const baseUrl = apiUrl.replace("/api", "");
+			fullUrl = `${baseUrl}${url}`;
+		} else {
+			// URL doesn't have /api, so add it
+			fullUrl = `${apiUrl}${url}`;
+		}
+
+		console.log("🔍 Debug: safeFetch URL:", {
+			original: url,
+			full: fullUrl,
+			apiUrl,
+		});
+
+		const response = await fetch(fullUrl, {
 			...options,
 			signal: AbortSignal.timeout(10000), // 10 second timeout
 		});
@@ -96,12 +126,12 @@ export async function safeFetch(
 					ok: false,
 					error:
 						errorData.message ||
-						'Server unavailable. Please try again later.',
+						"Server unavailable. Please try again later.",
 				};
 			} catch (jsonError) {
 				return {
 					ok: false,
-					error: 'Server unavailable. Please try again later.',
+					error: "Server unavailable. Please try again later.",
 				};
 			}
 		}
@@ -116,29 +146,29 @@ export async function safeFetch(
 		} catch (jsonError) {
 			return {
 				ok: false,
-				error: 'Error processing server response',
+				error: "Error processing server response",
 			};
 		}
 	} catch (error: any) {
-		console.error('Fetch request failed:', error);
+		console.error("Fetch request failed:", error);
 
-		if (error.name === 'AbortError') {
+		if (error.name === "AbortError") {
 			return {
 				ok: false,
-				error: 'Server not responding (timeout)',
+				error: "Server not responding (timeout)",
 			};
 		}
 
-		if (error.name === 'TypeError' && error.message.includes('fetch')) {
+		if (error.name === "TypeError" && error.message.includes("fetch")) {
 			return {
 				ok: false,
-				error: 'Server unavailable. Check your internet connection.',
+				error: "Server unavailable. Check your internet connection.",
 			};
 		}
 
 		return {
 			ok: false,
-			error: error.message || 'Unknown error',
+			error: error.message || "Unknown error",
 		};
 	}
 }

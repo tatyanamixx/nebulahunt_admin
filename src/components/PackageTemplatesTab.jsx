@@ -32,10 +32,12 @@ export default function PackageTemplatesTab({ className = "" }) {
 		slug: "",
 		name: "",
 		description: "",
-		amount: 0,
-		resource: "stardust",
-		price: 0,
-		currency: "stardust",
+		// New structure fields
+		category: "resourcePurchase",
+		actionType: "fixedAmount",
+		actionTarget: "reward",
+		actionData: {},
+		costData: {},
 		status: true,
 		icon: "",
 		sortOrder: 0,
@@ -76,10 +78,11 @@ export default function PackageTemplatesTab({ className = "" }) {
 			slug: "",
 			name: "",
 			description: "",
-			amount: 0,
-			resource: "stardust",
-			price: 0,
-			currency: "stardust",
+			category: "resourcePurchase",
+			actionType: "fixedAmount",
+			actionTarget: "reward",
+			actionData: { resource: "stardust", amount: 1000 },
+			costData: { price: 99, currency: "tgStars" },
 			status: true,
 			icon: "",
 			sortOrder: 0,
@@ -173,8 +176,34 @@ export default function PackageTemplatesTab({ className = "" }) {
 
 	const handleCreateTemplate = async () => {
 		try {
-			if (!formData.slug || !formData.name) {
-				showMessage("Please fill in all required fields", "error");
+			if (
+				!formData.slug ||
+				!formData.name ||
+				!formData.category ||
+				!formData.actionType ||
+				!formData.actionTarget
+			) {
+				showMessage(
+					"Please fill in all required fields (slug, name, category, action type, action target)",
+					"error"
+				);
+				return;
+			}
+
+			// Validate actionData and costData are valid JSON objects
+			if (
+				typeof formData.actionData !== "object" ||
+				formData.actionData === null
+			) {
+				showMessage("Action Data must be a valid JSON object", "error");
+				return;
+			}
+
+			if (
+				typeof formData.costData !== "object" ||
+				formData.costData === null
+			) {
+				showMessage("Cost Data must be a valid JSON object", "error");
 				return;
 			}
 
@@ -204,6 +233,37 @@ export default function PackageTemplatesTab({ className = "" }) {
 	const handleUpdateTemplate = async () => {
 		try {
 			if (!editingTemplate?.slug) return;
+
+			if (
+				!formData.slug ||
+				!formData.name ||
+				!formData.category ||
+				!formData.actionType ||
+				!formData.actionTarget
+			) {
+				showMessage(
+					"Please fill in all required fields (slug, name, category, action type, action target)",
+					"error"
+				);
+				return;
+			}
+
+			// Validate actionData and costData are valid JSON objects
+			if (
+				typeof formData.actionData !== "object" ||
+				formData.actionData === null
+			) {
+				showMessage("Action Data must be a valid JSON object", "error");
+				return;
+			}
+
+			if (
+				typeof formData.costData !== "object" ||
+				formData.costData === null
+			) {
+				showMessage("Cost Data must be a valid JSON object", "error");
+				return;
+			}
 
 			// Clean up formData - remove empty validUntil
 			const cleanedData = {
@@ -279,10 +339,11 @@ export default function PackageTemplatesTab({ className = "" }) {
 			slug: template.slug || "",
 			name: template.name || "",
 			description: template.description || "",
-			amount: template.amount || 0,
-			resource: template.resource || "stardust",
-			price: template.price || 0,
-			currency: template.currency || "stardust",
+			category: template.category || "resourcePurchase",
+			actionType: template.actionType || "fixedAmount",
+			actionTarget: template.actionTarget || "reward",
+			actionData: template.actionData || {},
+			costData: template.costData || {},
 			status: template.status ?? true,
 			icon: template.icon || "",
 			sortOrder: template.sortOrder || 0,
@@ -296,7 +357,25 @@ export default function PackageTemplatesTab({ className = "" }) {
 	};
 
 	const downloadTemplate = (template) => {
-		const dataStr = JSON.stringify(template, null, 2);
+		// Экспортируем только нужные поля, исключая legacy и служебные
+		const cleanTemplate = {
+			slug: template.slug,
+			name: template.name,
+			description: template.description,
+			category: template.category,
+			actionType: template.actionType,
+			actionTarget: template.actionTarget,
+			actionData: template.actionData,
+			costData: template.costData,
+			status: template.status,
+			icon: template.icon,
+			sortOrder: template.sortOrder,
+			labelKey: template.labelKey,
+			isPromoted: template.isPromoted,
+			validUntil: template.validUntil,
+		};
+
+		const dataStr = JSON.stringify(cleanTemplate, null, 2);
 		const dataUri =
 			"data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
 		const exportFileDefaultName = `${template.slug}.json`;
@@ -308,7 +387,25 @@ export default function PackageTemplatesTab({ className = "" }) {
 	};
 
 	const downloadAllTemplates = () => {
-		const dataStr = JSON.stringify(templates, null, 2);
+		// Экспортируем только нужные поля для всех шаблонов
+		const cleanTemplates = templates.map((template) => ({
+			slug: template.slug,
+			name: template.name,
+			description: template.description,
+			category: template.category,
+			actionType: template.actionType,
+			actionTarget: template.actionTarget,
+			actionData: template.actionData,
+			costData: template.costData,
+			status: template.status,
+			icon: template.icon,
+			sortOrder: template.sortOrder,
+			labelKey: template.labelKey,
+			isPromoted: template.isPromoted,
+			validUntil: template.validUntil,
+		}));
+
+		const dataStr = JSON.stringify(cleanTemplates, null, 2);
 		const dataUri =
 			"data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
 		const exportFileDefaultName = "package-templates.json";
@@ -317,6 +414,61 @@ export default function PackageTemplatesTab({ className = "" }) {
 		linkElement.setAttribute("href", dataUri);
 		linkElement.setAttribute("download", exportFileDefaultName);
 		linkElement.click();
+	};
+
+	const getPackageCardColor = (template) => {
+		// Определяем цвет на основе категории и типа действия
+		if (template.category === "resourcePurchase") {
+			// Для ресурсов определяем цвет по типу ресурса
+			if (template.actionData && template.actionData.resource) {
+				switch (template.actionData.resource) {
+					case "stardust":
+						return "bg-gradient-to-r from-blue-900 to-blue-800 border-blue-600";
+					case "darkMatter":
+						return "bg-gradient-to-r from-purple-900 to-purple-800 border-purple-600";
+					case "stars":
+						return "bg-gradient-to-r from-yellow-900 to-yellow-800 border-yellow-600";
+					default:
+						return "bg-gradient-to-r from-gray-800 to-gray-700 border-gray-600";
+				}
+			}
+			return "bg-gradient-to-r from-blue-900 to-blue-800 border-blue-600";
+		} else if (template.category === "gameObject") {
+			// Для игровых объектов
+			return "bg-gradient-to-r from-green-900 to-green-800 border-green-600";
+		}
+
+		// По умолчанию
+		return "bg-gradient-to-r from-gray-800 to-gray-700 border-gray-600";
+	};
+
+	const getResourceIcon = (template) => {
+		if (
+			template.category === "resourcePurchase" &&
+			template.actionData &&
+			template.actionData.resource
+		) {
+			switch (template.actionData.resource) {
+				case "stardust":
+					return "💫";
+				case "darkMatter":
+					return "🌌";
+				case "stars":
+					return "⭐";
+				default:
+					return "📦";
+			}
+		} else if (template.category === "gameObject") {
+			return "🎮";
+		}
+		return "📦";
+	};
+
+	const getActionTypeIcon = (template) => {
+		if (template.actionType === "fixedAmount") return "💎";
+		if (template.actionType === "variableAmount") return "🔄";
+		if (template.actionType === "updateField") return "⚙️";
+		return "📋";
 	};
 
 	if (loading) {
@@ -393,17 +545,24 @@ export default function PackageTemplatesTab({ className = "" }) {
 						{templates.map((template) => (
 							<div
 								key={template.slug}
-								className="bg-gray-700 rounded-lg p-4 border border-gray-600"
+								className={`${getPackageCardColor(
+									template
+								)} rounded-lg p-4 border shadow-lg hover:opacity-90 transition-all duration-200`}
 							>
 								<div className="flex items-center justify-between">
 									<div className="flex-1">
 										<div className="flex items-center space-x-3 mb-2">
-											<h3 className="text-lg font-semibold text-white">
-												{template.name}
-											</h3>
-											<span className="text-sm text-gray-400">
-												({template.slug})
+											<span className="text-2xl">
+												{getResourceIcon(template)}
 											</span>
+											<div>
+												<h3 className="text-lg font-semibold text-white">
+													{template.name}
+												</h3>
+												<span className="text-sm text-gray-300">
+													({template.slug})
+												</span>
+											</div>
 											{template.isPromoted && (
 												<span className="px-2 py-1 text-xs bg-yellow-600 text-white rounded">
 													Promoted
@@ -420,39 +579,47 @@ export default function PackageTemplatesTab({ className = "" }) {
 												{template.description}
 											</p>
 										)}
-										<div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-											<div>
-												<span className="text-gray-400">
-													Amount:
+										<div className="space-y-2 text-sm">
+											{/* New structure fields */}
+											<div className="flex items-center">
+												<span className="text-gray-400 w-24">
+													Category:
 												</span>
-												<span className="text-white ml-2">
-													{template.amount}{" "}
-													{template.resource}
-												</span>
-											</div>
-											<div>
-												<span className="text-gray-400">
-													Price:
-												</span>
-												<span className="text-white ml-2">
-													{template.price}{" "}
-													{template.currency}
+												<span className="text-white font-medium">
+													{template.category || "N/A"}
 												</span>
 											</div>
-											<div className="col-span-2">
-												<span className="text-gray-400">
-													Label Key:
+											<div className="flex items-center">
+												<span className="text-gray-400 w-24">
+													Action:
 												</span>
-												<span className="text-white ml-2 break-all max-w-md">
-													{template.labelKey || "N/A"}
+												<span className="text-white font-medium">
+													{template.actionType || "N/A"}
 												</span>
 											</div>
-											<div>
-												<span className="text-gray-400">
+											<div className="flex items-center">
+												<span className="text-gray-400 w-24">
+													Target:
+												</span>
+												<span className="text-white font-medium">
+													{template.actionTarget || "N/A"}
+												</span>
+											</div>
+											<div className="flex items-center">
+												<span className="text-gray-400 w-24">
 													Sort Order:
 												</span>
-												<span className="text-white ml-2">
+												<span className="text-white font-medium">
 													{template.sortOrder || 0}
+												</span>
+											</div>
+
+											<div className="flex items-start">
+												<span className="text-gray-400 w-24">
+													Label Key:
+												</span>
+												<span className="text-white font-medium break-all max-w-md">
+													{template.labelKey || "N/A"}
 												</span>
 											</div>
 										</div>
@@ -628,34 +795,64 @@ export default function PackageTemplatesTab({ className = "" }) {
 									className="w-full h-64 p-3 bg-gray-700 border border-gray-600 rounded-md text-white font-mono text-sm"
 									placeholder={`[
   {
-    "slug": "basic-stardust-pack",
+    "slug": "basic-stardust",
     "name": "Basic Stardust Pack",
     "description": "1000 stardust for basic needs",
-    "amount": 1000,
-    "resource": "stardust",
-    "price": 99,
-    "currency": "tgStars",
+    "category": "resourcePurchase",
+    "actionType": "fixedAmount",
+    "actionTarget": "reward",
+    "actionData": {"resource": "stardust", "amount": 1000},
+    "costData": {"price": 99, "currency": "tgStars"},
     "status": true,
     "icon": "📦",
     "sortOrder": 1,
     "labelKey": "store.basicPack",
-    "isPromoted": false,
-    "validUntil": ""
+    "isPromoted": false
   },
   {
-    "slug": "premium-dark-matter",
-    "name": "Premium Dark Matter",
-    "description": "500 dark matter for advanced players",
-    "amount": 500,
-    "resource": "darkMatter",
-    "price": 299,
-    "currency": "tonToken",
+    "slug": "dark-matter-pack",
+    "name": "Dark Matter Pack",
+    "description": "500 dark matter for advanced needs",
+    "category": "resourcePurchase",
+    "actionType": "fixedAmount",
+    "actionTarget": "reward",
+    "actionData": {"resource": "darkMatter", "amount": 500},
+    "costData": {"price": 199, "currency": "tgStars"},
     "status": true,
-    "icon": "💎",
+    "icon": "🌌",
     "sortOrder": 2,
-    "labelKey": "store.premium.darkMatter",
-    "isPromoted": true,
-    "validUntil": ""
+    "labelKey": "store.darkMatterPack",
+    "isPromoted": false
+  },
+  {
+    "slug": "variable-stardust",
+    "name": "Variable Stardust Pack",
+    "description": "Variable amount of stardust",
+    "category": "resourcePurchase",
+    "actionType": "variableAmount",
+    "actionTarget": "reward",
+    "actionData": {"resource": "stardust", "amount": "{{amount}}"},
+    "costData": {"price": 99, "currency": "tgStars"},
+    "status": true,
+    "icon": "🔄",
+    "sortOrder": 3,
+    "labelKey": "store.variableStardustPack",
+    "isPromoted": false
+  },
+  {
+    "slug": "galaxy-name-update",
+    "name": "Update Galaxy Name",
+    "description": "Update galaxy name",
+    "category": "gameObject",
+    "actionType": "updateField",
+    "actionTarget": "entity",
+    "actionData": {"table": "galaxy", "seed": "{{seed}}", "field": "name", "value": "{{value}}"},
+    "costData": {"price": 199, "currency": "tgStars"},
+    "status": true,
+    "icon": "🌌",
+    "sortOrder": 10,
+    "labelKey": "store.updateGalaxyName",
+    "isPromoted": false
   }
 ]`}
 								/>
@@ -754,7 +951,204 @@ export default function PackageTemplatesTab({ className = "" }) {
 // Package Template Form Component
 function PackageTemplateForm({ formData, setFormData, onSubmit, submitText }) {
 	const updateField = (field, value) => {
-		setFormData({ ...formData, [field]: value });
+		const newFormData = { ...formData, [field]: value };
+
+		// Auto-update actionData and costData based on selections
+		if (
+			field === "actionType" ||
+			field === "actionTarget" ||
+			field === "category"
+		) {
+			// Update actionData based on actionType and actionTarget
+			if (
+				newFormData.actionType === "fixedAmount" &&
+				newFormData.actionTarget === "reward"
+			) {
+				newFormData.actionData = {
+					resource: "stardust",
+					amount: 1000,
+				};
+			} else if (
+				newFormData.actionType === "variableAmount" &&
+				newFormData.actionTarget === "reward"
+			) {
+				newFormData.actionData = {
+					resource: "stardust",
+					amount: "{{amount}}",
+				};
+			} else if (
+				newFormData.actionType === "updateField" &&
+				newFormData.actionTarget === "entity"
+			) {
+				newFormData.actionData = {
+					table: "galaxy",
+					seed: "{{seed}}",
+					field: "{{field}}",
+					value: "{{value}}",
+				};
+			}
+
+			// Update costData based on actionType
+			if (
+				newFormData.actionType === "fixedAmount" ||
+				newFormData.actionType === "variableAmount"
+			) {
+				newFormData.costData = {
+					price: 99,
+					currency: "tgStars",
+				};
+			} else if (newFormData.actionType === "updateField") {
+				newFormData.costData = {
+					price: 99,
+					currency: "tgStars",
+				};
+			}
+		}
+
+		// Handle JSON fields
+		if (field === "actionData" || field === "costData") {
+			try {
+				// Try to parse as JSON if it's a string
+				if (typeof value === "string") {
+					const parsed = JSON.parse(value);
+					newFormData[field] = parsed;
+				} else {
+					newFormData[field] = value;
+				}
+			} catch (error) {
+				// If parsing fails, store as string (user is still typing)
+				newFormData[field] = value;
+			}
+		}
+
+		setFormData(newFormData);
+	};
+
+	const loadExample = (exampleName) => {
+		let exampleData = {};
+		switch (exampleName) {
+			case "stardust_fixed":
+				exampleData = {
+					slug: "basic-stardust-pack",
+					name: "Basic Stardust Pack",
+					description: "1000 stardust for basic needs",
+					category: "resourcePurchase",
+					actionType: "fixedAmount",
+					actionTarget: "reward",
+					actionData: { resource: "stardust", amount: 1000 },
+					costData: { price: 99, currency: "tgStars" },
+					status: true,
+					icon: "📦",
+					sortOrder: 1,
+					labelKey: "store.basicPack",
+					isPromoted: false,
+					validUntil: "",
+				};
+				break;
+			case "darkmatter_fixed":
+				exampleData = {
+					slug: "dark-matter-pack",
+					name: "Dark Matter Pack",
+					description: "500 dark matter for advanced needs",
+					category: "resourcePurchase",
+					actionType: "fixedAmount",
+					actionTarget: "reward",
+					actionData: { resource: "darkMatter", amount: 500 },
+					costData: { price: 199, currency: "tgStars" },
+					status: true,
+					icon: "🌌",
+					sortOrder: 2,
+					labelKey: "store.darkMatterPack",
+					isPromoted: false,
+					validUntil: "",
+				};
+				break;
+			case "stardust_variable":
+				exampleData = {
+					slug: "variable-stardust-pack",
+					name: "Variable Stardust Pack",
+					description: "Variable amount of stardust",
+					category: "resourcePurchase",
+					actionType: "variableAmount",
+					actionTarget: "reward",
+					actionData: { resource: "stardust", amount: "{{amount}}" },
+					costData: { price: 99, currency: "tgStars" },
+					status: true,
+					icon: "🔄",
+					sortOrder: 3,
+					labelKey: "store.variableStardustPack",
+					isPromoted: false,
+					validUntil: "",
+				};
+				break;
+			case "galaxy_name":
+				exampleData = {
+					slug: "update-galaxy-name",
+					name: "Update Galaxy Name",
+					description: "Update galaxy name",
+					category: "gameObject",
+					actionType: "updateField",
+					actionTarget: "entity",
+					actionData: {
+						table: "galaxy",
+						seed: "{{seed}}",
+						field: "name",
+						value: "{{value}}",
+					},
+					costData: { price: 99, currency: "tgStars" },
+					status: true,
+					icon: "🌌",
+					sortOrder: 10,
+					labelKey: "store.updateGalaxyName",
+					isPromoted: false,
+					validUntil: "",
+				};
+				break;
+			case "galaxy_field":
+				exampleData = {
+					slug: "update-galaxy-field",
+					name: "Update Galaxy Field",
+					description: "Update a specific field on the galaxy",
+					category: "gameObject",
+					actionType: "updateField",
+					actionTarget: "entity",
+					actionData: {
+						table: "galaxy",
+						seed: "{{seed}}",
+						field: "name",
+						value: "{{value}}",
+					},
+					costData: { price: 99, currency: "tgStars" },
+					status: true,
+					icon: "⚙️",
+					sortOrder: 11,
+					labelKey: "store.updateGalaxyField",
+					isPromoted: false,
+					validUntil: "",
+				};
+				break;
+			case "custom":
+				exampleData = {
+					slug: "custom-package",
+					name: "Custom Package",
+					description: "A package with custom action and cost",
+					category: "resourcePurchase", // Or gameObject
+					actionType: "fixedAmount", // Or variableAmount, updateField
+					actionTarget: "reward", // Or entity
+					actionData: { resource: "gold", amount: 100 }, // Or table, seed, field, value
+					costData: { price: 199, currency: "tgStars" }, // Or price, currency
+					status: true,
+					icon: "🎨",
+					sortOrder: 12,
+					labelKey: "store.customPackage",
+					isPromoted: false,
+					validUntil: "",
+				};
+				break;
+			default:
+				break;
+		}
+		setFormData(exampleData);
 	};
 
 	return (
@@ -802,73 +1196,218 @@ function PackageTemplateForm({ formData, setFormData, onSubmit, submitText }) {
 				/>
 			</div>
 
-			<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-				<div>
-					<label className="block text-sm font-medium text-gray-300 mb-1">
-						Resource *
-					</label>
-					<select
-						value={formData.resource || "stardust"}
-						onChange={(e) => updateField("resource", e.target.value)}
-						aria-label="Select resource type"
-						className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-white"
-					>
-						<option value="stardust">Stardust</option>
-						<option value="darkMatter">Dark Matter</option>
-						<option value="stars">Stars</option>
-					</select>
-				</div>
-
-				<div>
-					<label className="block text-sm font-medium text-gray-300 mb-1">
-						Amount *
-					</label>
-					<input
-						type="number"
-						value={formData.amount || 0}
-						onChange={(e) =>
-							updateField("amount", parseInt(e.target.value) || 0)
-						}
-						className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-white"
-						placeholder="0"
-					/>
+			{/* New structure fields */}
+			<div className="mb-4 p-3 bg-blue-900 bg-opacity-30 border border-blue-600 rounded-md">
+				<h4 className="text-sm font-medium text-blue-300 mb-2">
+					🚀 Package Structure Guide
+				</h4>
+				<div className="text-xs text-blue-200 space-y-1">
+					<p>
+						<strong>Resource Packages:</strong> Give players stardust,
+						dark matter, or other resources
+					</p>
+					<p>
+						<strong>Game Object Packages:</strong> Update galaxy names,
+						fields, or other game entities
+					</p>
+					<p>
+						<strong>Variable Packages:</strong> Use placeholders like{" "}
+						&#123;&#123;amount&#125;&#125;, &#123;&#123;seed&#125;&#125;,
+						&#123;&#123;value&#125;&#125; for dynamic content
+					</p>
+					<p>
+						<strong>All data is stored in JSONB fields:</strong>{" "}
+						actionData (what the package does) and costData (how much it
+						costs)
+					</p>
 				</div>
 			</div>
 
-			<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+			<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 				<div>
 					<label className="block text-sm font-medium text-gray-300 mb-1">
-						Price *
+						Category *
 					</label>
-					<input
-						type="number"
-						step="0.00000001"
-						value={formData.price || 0}
-						onChange={(e) =>
-							updateField("price", parseFloat(e.target.value) || 0)
-						}
+					<select
+						value={formData.category || "resourcePurchase"}
+						onChange={(e) => updateField("category", e.target.value)}
+						aria-label="Select category"
 						className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-white"
-						placeholder="0"
-					/>
+					>
+						<option value="resourcePurchase">Resource Purchase</option>
+						<option value="gameObject">Game Object</option>
+					</select>
+					<p className="text-xs text-gray-400 mt-1">
+						{formData.category === "resourcePurchase"
+							? "💫 For buying resources like stardust, dark matter, stars"
+							: "🎮 For game object updates like galaxy names, fields, or other entities"}
+					</p>
 				</div>
 
 				<div>
 					<label className="block text-sm font-medium text-gray-300 mb-1">
-						Currency *
+						Action Type *
 					</label>
 					<select
-						value={formData.currency || "stardust"}
-						onChange={(e) => updateField("currency", e.target.value)}
-						aria-label="Select currency type"
+						value={formData.actionType || "fixedAmount"}
+						onChange={(e) => updateField("actionType", e.target.value)}
+						aria-label="Select action type"
 						className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-white"
 					>
-						<option value="tgStars">TG Stars</option>
-						<option value="tonToken">TON Token</option>
-						<option value="stars">Stars</option>
-						<option value="stardust">Stardust</option>
-						<option value="darkMatter">Dark Matter</option>
+						<option value="fixedAmount">Fixed Amount</option>
+						<option value="variableAmount">Variable Amount</option>
+						<option value="updateField">Update Field</option>
 					</select>
+					<p className="text-xs text-gray-400 mt-1">
+						{formData.actionType === "fixedAmount"
+							? "💫 Fixed resource amount - gives exact amount to player"
+							: formData.actionType === "variableAmount"
+							? "🔄 Variable amount - use {{amount}} placeholder for dynamic values"
+							: "⚙️ Update game object fields - modify galaxy names, properties, etc."}
+					</p>
 				</div>
+
+				<div>
+					<label className="block text-sm font-medium text-gray-300 mb-1">
+						Action Target *
+					</label>
+					<select
+						value={formData.actionTarget || "reward"}
+						onChange={(e) => updateField("actionTarget", e.target.value)}
+						aria-label="Select action target"
+						className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-white"
+					>
+						<option value="reward">Reward</option>
+						<option value="entity">Entity</option>
+					</select>
+					<p className="text-xs text-gray-400 mt-1">
+						{formData.actionTarget === "reward"
+							? "🎁 Give resources to player - stardust, dark matter, etc."
+							: "🎯 Update game object - galaxy names, properties, or other entities"}
+					</p>
+				</div>
+			</div>
+
+			{/* Action Data */}
+			<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+				<div>
+					<label className="block text-sm font-medium text-gray-300 mb-1">
+						Action Data (JSON) *
+					</label>
+					<textarea
+						name="actionData"
+						value={
+							typeof formData.actionData === "object"
+								? JSON.stringify(formData.actionData, null, 2)
+								: formData.actionData
+						}
+						onChange={(e) => updateField("actionData", e.target.value)}
+						className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+						rows={4}
+						placeholder="Enter JSON data for the package action"
+					/>
+					<p className="text-xs text-gray-400 mt-1">
+						{formData.category === "resourcePurchase" &&
+						formData.actionType === "fixedAmount" &&
+						formData.actionTarget === "reward"
+							? '💫 Fixed Resource: {"resource": "stardust", "amount": 10000}'
+							: formData.category === "resourcePurchase" &&
+							  formData.actionType === "variableAmount" &&
+							  formData.actionTarget === "reward"
+							? '🔄 Variable Resource: {"resource": "stardust", "amount": "{{amount}}"}'
+							: formData.category === "gameObject" &&
+							  formData.actionType === "updateField" &&
+							  formData.actionTarget === "entity"
+							? '🎯 Update Galaxy: {"table": "galaxy", "seed": "{{seed}}", "field": "name", "value": "{{value}}"}'
+							: "📝 Define what the package does when used"}
+					</p>
+				</div>
+				<div>
+					<label className="block text-sm font-medium text-gray-300 mb-1">
+						Cost Data (JSON) *
+					</label>
+					<textarea
+						name="costData"
+						value={
+							typeof formData.costData === "object"
+								? JSON.stringify(formData.costData, null, 2)
+								: formData.costData
+						}
+						onChange={(e) => updateField("costData", e.target.value)}
+						className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+						rows={4}
+						placeholder="Enter JSON data for the package cost"
+					/>
+					<p className="text-xs text-gray-400 mt-1">
+						{formData.category === "resourcePurchase"
+							? '💰 Resource Cost: {"price": 99, "currency": "tgStars"} - Use tgStars for Telegram Stars'
+							: formData.category === "gameObject"
+							? '🎮 Game Object Cost: {"price": 199, "currency": "tgStars"} - Higher price for special features'
+							: "💵 Define the cost of the package - price in numbers, currency as string"}
+					</p>
+				</div>
+			</div>
+
+			{/* Quick Examples Section */}
+			<div className="mb-6 p-4 bg-gray-800 border border-gray-600 rounded-md">
+				<h4 className="text-sm font-medium text-gray-300 mb-3">
+					🚀 Quick Examples - Click to load template
+				</h4>
+				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+					<button
+						type="button"
+						onClick={() => loadExample("stardust_fixed")}
+						className="p-2 text-xs bg-blue-900 hover:bg-blue-800 border border-blue-600 rounded text-blue-200 hover:text-white transition-colors"
+						title="Basic stardust pack: 1000 stardust for 99 tgStars"
+					>
+						💫 Fixed Stardust
+					</button>
+					<button
+						type="button"
+						onClick={() => loadExample("darkmatter_fixed")}
+						className="p-2 text-xs bg-purple-900 hover:bg-purple-800 border border-purple-600 rounded text-purple-200 hover:text-white transition-colors"
+						title="Dark matter pack: 500 dark matter for 199 tgStars"
+					>
+						🌌 Fixed Dark Matter
+					</button>
+					<button
+						type="button"
+						onClick={() => loadExample("stardust_variable")}
+						className="p-2 text-xs bg-green-900 hover:bg-green-800 border border-green-600 rounded text-green-200 hover:text-white transition-colors"
+						title="Variable stardust: dynamic amount with {{amount}} placeholder"
+					>
+						🔄 Variable Stardust
+					</button>
+					<button
+						type="button"
+						onClick={() => loadExample("galaxy_name")}
+						className="p-2 text-xs bg-yellow-900 hover:bg-yellow-800 border border-yellow-600 rounded text-yellow-200 hover:text-white transition-colors"
+						title="Update galaxy name: modify galaxy names for 199 tgStars"
+					>
+						🎯 Galaxy Name Update
+					</button>
+					<button
+						type="button"
+						onClick={() => loadExample("galaxy_field")}
+						className="p-2 text-xs bg-red-900 hover:bg-red-800 border border-red-600 rounded text-red-200 hover:text-white transition-colors"
+						title="Update galaxy field: modify any galaxy property for 199 tgStars"
+					>
+						⚙️ Galaxy Field Update
+					</button>
+					<button
+						type="button"
+						onClick={() => loadExample("custom")}
+						className="p-2 text-xs bg-gray-700 hover:bg-gray-600 border border-gray-500 rounded text-gray-300 hover:text-white transition-colors"
+						title="Custom package: template for creating your own package type"
+					>
+						🎨 Custom Package
+					</button>
+				</div>
+				<p className="text-xs text-gray-400 mt-3">
+					💡 <strong>Tip:</strong> Use these examples as starting points,
+					then customize the values, names, and descriptions to match your
+					needs!
+				</p>
 			</div>
 
 			<div className="grid grid-cols-1 gap-4">

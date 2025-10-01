@@ -39,9 +39,12 @@ export default function TaskTemplatesTab({ className = "" }) {
 		description: { en: "", ru: "" },
 		reward: { type: "stardust", amount: 0 },
 		condition: {},
-		icon: "",
+		icon: "🎯",
 		active: true,
-		category: "general",
+		isDaily: false,
+		sortOrder: 0, // Будет установлен автоматически
+		category: "stardust",
+		checkType: "stardust_count",
 	});
 
 	useEffect(() => {
@@ -71,6 +74,107 @@ export default function TaskTemplatesTab({ className = "" }) {
 		setTimeout(() => setMessage(""), 5000);
 	};
 
+	const getTaskCardColor = (template) => {
+		// Определяем цвет на основе типа награды
+		if (template.reward && template.reward.type) {
+			switch (template.reward.type) {
+				case "stardust":
+					return "bg-gradient-to-r from-blue-900 to-blue-800 border-blue-600";
+				case "darkMatter":
+					return "bg-gradient-to-r from-purple-900 to-purple-800 border-purple-600";
+				case "stars":
+					return "bg-gradient-to-r from-yellow-900 to-yellow-800 border-yellow-600";
+				case "tonToken":
+					return "bg-gradient-to-r from-green-900 to-green-800 border-green-600";
+				default:
+					return "bg-gradient-to-r from-gray-800 to-gray-700 border-gray-600";
+			}
+		}
+
+		// Если нет награды, определяем по категории
+		if (template.category) {
+			switch (template.category) {
+				case "daily":
+					return "bg-gradient-to-r from-orange-900 to-orange-800 border-orange-600";
+				case "stardust":
+					return "bg-gradient-to-r from-blue-900 to-blue-800 border-blue-600";
+				case "darkMatter":
+					return "bg-gradient-to-r from-purple-900 to-purple-800 border-purple-600";
+				default:
+					return "bg-gradient-to-r from-gray-800 to-gray-700 border-gray-600";
+			}
+		}
+
+		// По умолчанию
+		return "bg-gradient-to-r from-gray-800 to-gray-700 border-gray-600";
+	};
+
+	const getRewardIcon = (template) => {
+		if (template.reward && template.reward.type) {
+			switch (template.reward.type) {
+				case "stardust":
+					return "💫";
+				case "darkMatter":
+					return "🌌";
+				case "stars":
+					return "⭐";
+				case "tonToken":
+					return "💰";
+				default:
+					return "🎁";
+			}
+		}
+		return template.icon || "🎯";
+	};
+
+	const getCategoryIcon = (template) => {
+		if (template.category) {
+			switch (template.category) {
+				case "daily":
+					return "📅";
+				case "stardust":
+					return "💫";
+				case "darkMatter":
+					return "🌌";
+				default:
+					return "🎯";
+			}
+		}
+		return "🎯";
+	};
+
+	const sortTemplates = (templates) => {
+		return [...templates].sort((a, b) => {
+			// Сначала по sortOrder
+			const sortOrderA = a.sortOrder || getNextSortOrder();
+			const sortOrderB = b.sortOrder || getNextSortOrder();
+
+			if (sortOrderA !== sortOrderB) {
+				return sortOrderA - sortOrderB;
+			}
+
+			// Затем по категории
+			const categoryA = a.category || "";
+			const categoryB = b.category || "";
+
+			if (categoryA !== categoryB) {
+				return categoryA.localeCompare(categoryB);
+			}
+
+			// Наконец по имени
+			const nameA = a.name || a.slug || "";
+			const nameB = b.name || b.slug || "";
+
+			return nameA.localeCompare(nameB);
+		});
+	};
+
+	const getNextSortOrder = () => {
+		if (templates.length === 0) return 1;
+		const maxSortOrder = Math.max(...templates.map((t) => t.sortOrder || 0));
+		return maxSortOrder + 1;
+	};
+
 	const resetForm = () => {
 		setFormData({
 			slug: "",
@@ -78,9 +182,12 @@ export default function TaskTemplatesTab({ className = "" }) {
 			description: { en: "", ru: "" },
 			reward: { type: "stardust", amount: 0 },
 			condition: {},
-			icon: "",
+			icon: "🎯",
 			active: true,
-			category: "general",
+			isDaily: false,
+			sortOrder: getNextSortOrder(),
+			category: "stardust",
+			checkType: "stardust_count",
 		});
 		setJsonInput("");
 		setJsonError("");
@@ -153,8 +260,11 @@ export default function TaskTemplatesTab({ className = "" }) {
 
 	const handleCreateTemplate = async () => {
 		try {
-			if (!formData.slug || !formData.title?.en || !formData.description?.en) {
-				showMessage("Please fill in all required fields", "error");
+			if (!formData.slug || !formData.title.en || !formData.description.en) {
+				showMessage(
+					"Please fill in all required fields (slug, English title, English description)",
+					"error"
+				);
 				return;
 			}
 
@@ -244,8 +354,10 @@ export default function TaskTemplatesTab({ className = "" }) {
 			condition: template.condition || {},
 			icon: template.icon || "",
 			active: template.active ?? true,
-			sortOrder: template.sortOrder || 0,
-			category: template.category || "general",
+			isDaily: template.isDaily ?? false,
+			sortOrder: template.sortOrder || getNextSortOrder(),
+			category: template.category || "stardust",
+			checkType: template.checkType || "always_available",
 		};
 		console.log("Setting form data:", formData);
 		setFormData(formData);
@@ -292,18 +404,18 @@ export default function TaskTemplatesTab({ className = "" }) {
 				<div></div>
 				<div className="flex items-center space-x-2">
 					<button
-						onClick={downloadAllTemplates}
-						className="inline-flex items-center px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md transition-colors"
-					>
-						<Download className="h-4 w-4 mr-2" />
-						Export All
-					</button>
-					<button
 						onClick={() => setShowJsonModal(true)}
-						className="inline-flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+						className="inline-flex items-center px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors"
 					>
 						<Upload className="h-4 w-4 mr-2" />
 						Import JSON
+					</button>
+					<button
+						onClick={downloadAllTemplates}
+						className="inline-flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+					>
+						<Download className="h-4 w-4 mr-2" />
+						Export All
 					</button>
 					<button
 						onClick={() => setShowCreateModal(true)}
@@ -329,73 +441,103 @@ export default function TaskTemplatesTab({ className = "" }) {
 			)}
 
 			{/* Templates List */}
-			<div className="bg-gray-800 rounded-lg">
+			<div className="bg-gray-800 rounded-lg p-6">
 				{templates.length === 0 ? (
-					<div className="flex flex-col items-center justify-center p-8 text-gray-400">
-						<FileText className="h-12 w-12 text-gray-500 mx-auto mb-4" />
-						<p className="text-lg font-medium">
-							No task templates found
-						</p>
-						<p className="text-sm">
-							Create your first template to get started
-						</p>
+					<div className="text-center py-8">
+						<FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+						<p className="text-gray-400">No task templates found</p>
+						<button
+							onClick={() => setShowCreateModal(true)}
+							className="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+						>
+							<Plus className="h-4 w-4 mr-2" />
+							Create First Template
+						</button>
 					</div>
 				) : (
-					<div className="divide-y divide-gray-700">
-						{templates.map((template) => (
+					<div className="space-y-4">
+						{sortTemplates(templates).map((template) => (
 							<div
 								key={template.slug}
-								className="p-6 hover:bg-gray-750 transition-colors"
+								className={`${getTaskCardColor(
+									template
+								)} rounded-lg p-4 border shadow-lg hover:opacity-90 transition-all duration-200`}
 							>
 								<div className="flex items-center justify-between">
 									<div className="flex-1">
 										<div className="flex items-center space-x-3 mb-2">
-											<div className="flex items-center space-x-2">
-												<span className="text-2xl">
-													{template.icon}
-												</span>
-												<h3 className="text-lg font-medium text-white">
+											<span className="text-2xl">
+												{getRewardIcon(template)}
+											</span>
+											<div>
+												<h3 className="text-lg font-semibold text-white">
 													{template.title?.en ||
 														template.slug}
 												</h3>
-												<span
-													className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-														template.active
-															? "bg-green-100 text-green-800"
-															: "bg-red-100 text-red-800"
-													}`}
-												>
-													{template.active
-														? "ACTIVE"
-														: "INACTIVE"}
+												<span className="text-sm text-gray-300">
+													({template.slug})
+												</span>
+											</div>
+											{template.isDaily && (
+												<span className="px-2 py-1 text-xs bg-orange-600 text-white rounded">
+													Daily
+												</span>
+											)}
+											{!template.active && (
+												<span className="px-2 py-1 text-xs bg-red-600 text-white rounded">
+													Disabled
+												</span>
+											)}
+										</div>
+										{template.description?.en && (
+											<p className="text-gray-300 mb-2">
+												{template.description.en}
+											</p>
+										)}
+										<div className="space-y-2 text-sm">
+											<div className="flex items-center">
+												<span className="text-gray-400 w-24">
+													Reward:
+												</span>
+												<span className="text-white font-medium">
+													{template.reward?.amount || 0}{" "}
+													{getRewardIcon(template)}{" "}
+													{template.reward?.type || "N/A"}
+												</span>
+											</div>
+											<div className="flex items-center">
+												<span className="text-gray-400 w-24">
+													Category:
+												</span>
+												<span className="text-white font-medium">
+													{getCategoryIcon(template)}{" "}
+													{template.category || "N/A"}
+												</span>
+											</div>
+											<div className="flex items-center">
+												<span className="text-gray-400 w-24">
+													Condition:
+												</span>
+												<span className="text-white font-medium">
+													{template.condition?.type ||
+														"N/A"}
+													{template.condition?.threshold &&
+														` (${template.condition.threshold})`}
+												</span>
+											</div>
+											<div className="flex items-center">
+												<span className="text-gray-400 w-24">
+													Sort Order:
+												</span>
+												<span className="text-white font-medium">
+													{template.sortOrder ||
+														getNextSortOrder()}
 												</span>
 											</div>
 										</div>
-
-										<div className="text-sm text-gray-400 space-y-1">
-											<p>
-												<strong>Slug:</strong>{" "}
-												{template.slug}
-											</p>
-											<p>
-												<strong>Description:</strong>{" "}
-												{template.description?.en}
-											</p>
-											<p>
-												<strong>Reward:</strong>{" "}
-												{template.reward?.amount}{" "}
-												{template.reward?.type}
-											</p>
-											{template.sortOrder !== undefined && (
-												<p>
-													<strong>Sort Order:</strong>{" "}
-													{template.sortOrder}
-												</p>
-											)}
-										</div>
 									</div>
 
-									<div className="flex items-center space-x-2 ml-4">
+									<div className="flex space-x-2 ml-4">
 										<button
 											onClick={() =>
 												downloadTemplate(template)
@@ -479,6 +621,7 @@ export default function TaskTemplatesTab({ className = "" }) {
 							setFormData={setFormData}
 							onSubmit={handleCreateTemplate}
 							submitText="Create Template"
+							getNextSortOrder={getNextSortOrder}
 						/>
 					</div>
 				</div>
@@ -510,6 +653,7 @@ export default function TaskTemplatesTab({ className = "" }) {
 							setFormData={setFormData}
 							onSubmit={handleUpdateTemplate}
 							submitText="Update Template"
+							getNextSortOrder={getNextSortOrder}
 						/>
 					</div>
 				</div>
@@ -585,15 +729,10 @@ export default function TaskTemplatesTab({ className = "" }) {
 									className="w-full h-64 p-3 bg-gray-700 border border-gray-600 rounded-md text-white font-mono text-sm"
 									placeholder={`[
   {
-    "slug": "daily-login",
-    "title": {
-      "en": "Daily Login",
-      "ru": "Ежедневный вход"
-    },
-    "description": {
-      "en": "Login to the game daily",
-      "ru": "Входите в игру ежедневно"
-    },
+    "slug": "daily_login",
+    "name": "Daily Login",
+    "labelKey": "task.daily_login.title",
+    "description": "Login to the game daily",
     "reward": {
       "type": "stardust",
       "amount": 100
@@ -602,7 +741,10 @@ export default function TaskTemplatesTab({ className = "" }) {
       "type": "daily_login"
     },
     "icon": "🌟",
-    "active": true
+    "active": true,
+    "isDaily": true,
+    "sortOrder": ${getNextSortOrder()},
+    "category": "daily"
   }
 ]`}
 								/>
@@ -664,8 +806,7 @@ export default function TaskTemplatesTab({ className = "" }) {
 							</p>
 							<div className="bg-gray-700 p-3 rounded-md">
 								<p className="text-white font-medium">
-									{templateToDelete.title?.en ||
-										templateToDelete.slug}
+									{templateToDelete.name || templateToDelete.slug}
 								</p>
 								<p className="text-gray-400 text-sm">
 									Slug: {templateToDelete.slug}
@@ -699,7 +840,13 @@ export default function TaskTemplatesTab({ className = "" }) {
 }
 
 // Task Template Form Component
-function TaskTemplateForm({ formData, setFormData, onSubmit, submitText }) {
+function TaskTemplateForm({
+	formData,
+	setFormData,
+	onSubmit,
+	submitText,
+	getNextSortOrder,
+}) {
 	const updateField = (field, value) => {
 		setFormData({ ...formData, [field]: value });
 	};
@@ -708,14 +855,147 @@ function TaskTemplateForm({ formData, setFormData, onSubmit, submitText }) {
 		setFormData({
 			...formData,
 			[parent]: {
-				...formData[parent],
+				...(formData[parent] || {}),
 				[field]: value,
 			},
 		});
 	};
 
+	// Load example templates
+	const loadExample = (type) => {
+		let exampleData = { ...formData };
+
+		switch (type) {
+			case "daily_login":
+				exampleData = {
+					...formData,
+					slug: "daily_login",
+					title: { en: "Daily Explorer", ru: "Ежедневный исследователь" },
+					description: {
+						en: "Login daily to receive rewards",
+						ru: "Входите ежедневно для получения наград",
+					},
+					reward: { type: "stardust", amount: 100 },
+					condition: { type: "daily_login" },
+					icon: "📆",
+					category: "daily",
+					isDaily: true,
+					sortOrder: getNextSortOrder(),
+				};
+				break;
+			case "stardust_collect":
+				exampleData = {
+					...formData,
+					slug: "collect_stardust_5000",
+					title: { en: "Dust Collector", ru: "Собиратель пыли" },
+					description: {
+						en: "Collect 5,000 stardust",
+						ru: "Соберите 5,000 звездной пыли",
+					},
+					reward: { type: "stardust", amount: 1000 },
+					condition: { type: "stardust_count", threshold: 5000 },
+					icon: "✨",
+					category: "stardust",
+					isDaily: false,
+					sortOrder: getNextSortOrder(),
+				};
+				break;
+			case "galaxy_own":
+				exampleData = {
+					...formData,
+					slug: "own_galaxies_2",
+					title: { en: "Galactic Pioneer", ru: "Галактический пионер" },
+					description: {
+						en: "Own 2 galaxies",
+						ru: "Владейте 2 галактиками",
+					},
+					reward: { type: "stardust", amount: 3000 },
+					condition: { type: "owned_galaxies", threshold: 2 },
+					icon: "🌌",
+					category: "stardust",
+					isDaily: false,
+					sortOrder: getNextSortOrder(),
+				};
+				break;
+			case "stars_create":
+				exampleData = {
+					...formData,
+					slug: "create_stars_1000",
+					title: { en: "Star Crafter", ru: "Создатель звезд" },
+					description: {
+						en: "Create 1,000 stars",
+						ru: "Создайте 1,000 звезд",
+					},
+					reward: { type: "stardust", amount: 2000 },
+					condition: { type: "total_stars", threshold: 1000 },
+					icon: "⭐",
+					category: "stardust",
+					isDaily: false,
+					sortOrder: getNextSortOrder(),
+				};
+				break;
+			case "artifact_collect":
+				exampleData = {
+					...formData,
+					slug: "scan_galaxy_10",
+					name: "Cosmic Researcher",
+					labelKey: "task.scan_galaxy_10.title",
+					description: "Scan 10 galaxies",
+					reward: { type: "stardust", amount: 2000 },
+					condition: { type: "scan_count", threshold: 10 },
+					icon: "🔭",
+					category: "stardust",
+					isDaily: false,
+					sortOrder: getNextSortOrder(),
+				};
+				break;
+			case "custom":
+				exampleData = {
+					...formData,
+					slug: "custom_task",
+					name: "Custom Task",
+					labelKey: "task.custom.title",
+					description: "Complete this custom task",
+					reward: { type: "stardust", amount: 0 },
+					condition: { type: "custom", threshold: 1 },
+					icon: "🎯",
+					category: "stardust",
+					isDaily: false,
+					sortOrder: getNextSortOrder(),
+				};
+				break;
+		}
+		setFormData(exampleData);
+	};
+
 	return (
 		<div className="space-y-4">
+			{/* Task Structure Guide */}
+			<div className="mb-4 p-3 bg-blue-900 bg-opacity-30 border border-blue-600 rounded-md">
+				<h4 className="text-sm font-medium text-blue-300 mb-2">
+					🎯 Task Structure Guide
+				</h4>
+				<div className="text-xs text-blue-200 space-y-1">
+					<p>
+						<strong>Daily Tasks:</strong> Reset every day, perfect for
+						login rewards and daily activities
+					</p>
+					<p>
+						<strong>Progress Tasks:</strong> Track player progress like
+						collecting resources, owning galaxies
+					</p>
+					<p>
+						<strong>Condition Types:</strong> daily_login,
+						stardust_count, total_stars, owned_galaxies, scan_count,
+						login_streak
+					</p>
+					<p>
+						<strong>Reward Types:</strong> stardust, darkMatter - choose
+						based on task difficulty
+					</p>
+				</div>
+			</div>
+
 			<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 				<div>
 					<label className="block text-sm font-medium text-gray-300 mb-1">
@@ -725,10 +1005,10 @@ function TaskTemplateForm({ formData, setFormData, onSubmit, submitText }) {
 						type="text"
 						value={formData.slug || ""}
 						onChange={(e) =>
-							updateField("slug", e.target.value.replace(/\s+/g, "-"))
+							updateField("slug", e.target.value.replace(/\s+/g, "_"))
 						}
 						className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-white"
-						placeholder="daily-login"
+						placeholder="daily_login"
 					/>
 				</div>
 
@@ -743,6 +1023,10 @@ function TaskTemplateForm({ formData, setFormData, onSubmit, submitText }) {
 						className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-white"
 						placeholder="🌟"
 					/>
+					<p className="text-xs text-gray-400 mt-1">
+						🎨 Enter an emoji or icon for this task (e.g., 🌟, ⭐, 🎯,
+						💫)
+					</p>
 				</div>
 			</div>
 
@@ -758,13 +1042,13 @@ function TaskTemplateForm({ formData, setFormData, onSubmit, submitText }) {
 							updateNestedField("title", "en", e.target.value)
 						}
 						className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-white"
-						placeholder="Daily Login"
+						placeholder="Daily Explorer"
 					/>
 				</div>
 
 				<div>
 					<label className="block text-sm font-medium text-gray-300 mb-1">
-						Title (Russian)
+						Title (Russian) *
 					</label>
 					<input
 						type="text"
@@ -773,7 +1057,7 @@ function TaskTemplateForm({ formData, setFormData, onSubmit, submitText }) {
 							updateNestedField("title", "ru", e.target.value)
 						}
 						className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-white"
-						placeholder="Ежедневный вход"
+						placeholder="Ежедневный исследователь"
 					/>
 				</div>
 			</div>
@@ -790,13 +1074,13 @@ function TaskTemplateForm({ formData, setFormData, onSubmit, submitText }) {
 						}
 						className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-white"
 						rows={3}
-						placeholder="Login to the game daily"
+						placeholder="Login to the game daily to get rewards"
 					/>
 				</div>
 
 				<div>
 					<label className="block text-sm font-medium text-gray-300 mb-1">
-						Description (Russian)
+						Description (Russian) *
 					</label>
 					<textarea
 						value={formData.description?.ru || ""}
@@ -805,7 +1089,7 @@ function TaskTemplateForm({ formData, setFormData, onSubmit, submitText }) {
 						}
 						className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-white"
 						rows={3}
-						placeholder="Входите в игру ежедневно"
+						placeholder="Входите в игру ежедневно для получения наград"
 					/>
 				</div>
 			</div>
@@ -813,7 +1097,54 @@ function TaskTemplateForm({ formData, setFormData, onSubmit, submitText }) {
 			<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 				<div>
 					<label className="block text-sm font-medium text-gray-300 mb-1">
-						Reward Type
+						Category *
+					</label>
+					<select
+						value={formData.category || "stardust"}
+						onChange={(e) => updateField("category", e.target.value)}
+						aria-label="Select category"
+						className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-white"
+					>
+						<option value="daily">Daily</option>
+						<option value="stardust">Stardust</option>
+						<option value="darkMatter">Dark Matter</option>
+					</select>
+					<p className="text-xs text-gray-400 mt-1">
+						{formData.category === "daily"
+							? "🌟 Daily tasks that reset every day - perfect for login rewards"
+							: formData.category === "stardust"
+							? "💫 Tasks related to stardust collection and management"
+							: "🌌 Tasks involving dark matter and advanced resources"}
+					</p>
+				</div>
+
+				<div>
+					<label className="block text-sm font-medium text-gray-300 mb-1">
+						Sort Order
+					</label>
+					<input
+						type="number"
+						value={formData.sortOrder || getNextSortOrder()}
+						onChange={(e) =>
+							updateField(
+								"sortOrder",
+								parseInt(e.target.value) || getNextSortOrder()
+							)
+						}
+						className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-white"
+						placeholder={getNextSortOrder().toString()}
+					/>
+					<p className="text-xs text-gray-400 mt-1">
+						📊 Order for displaying tasks (lower numbers appear first)
+					</p>
+				</div>
+			</div>
+
+			{/* Reward Configuration */}
+			<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+				<div>
+					<label className="block text-sm font-medium text-gray-300 mb-1">
+						Reward Type *
 					</label>
 					<select
 						value={formData.reward?.type || "stardust"}
@@ -825,14 +1156,17 @@ function TaskTemplateForm({ formData, setFormData, onSubmit, submitText }) {
 					>
 						<option value="stardust">Stardust</option>
 						<option value="darkMatter">Dark Matter</option>
-						<option value="stars">Stars</option>
-						<option value="tonToken">TON Token</option>
 					</select>
+					<p className="text-xs text-gray-400 mt-1">
+						{formData.reward?.type === "stardust"
+							? "💫 Basic currency - good for easy tasks"
+							: "🌌 Premium currency - use for difficult tasks"}
+					</p>
 				</div>
 
 				<div>
 					<label className="block text-sm font-medium text-gray-300 mb-1">
-						Reward Amount
+						Reward Amount *
 					</label>
 					<input
 						type="number"
@@ -846,14 +1180,19 @@ function TaskTemplateForm({ formData, setFormData, onSubmit, submitText }) {
 						}
 						className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-white"
 						min="0"
-						placeholder="0"
+						placeholder="100"
 					/>
+					<p className="text-xs text-gray-400 mt-1">
+						💎 Amount of reward to give - balance difficulty with reward
+						value
+					</p>
 				</div>
 			</div>
 
+			{/* Condition Configuration */}
 			<div>
 				<label className="block text-sm font-medium text-gray-300 mb-1">
-					Condition (JSON)
+					Condition (JSON) *
 				</label>
 				<textarea
 					value={JSON.stringify(formData.condition || {}, null, 2)}
@@ -865,61 +1204,131 @@ function TaskTemplateForm({ formData, setFormData, onSubmit, submitText }) {
 							// Allow invalid JSON while typing
 						}
 					}}
-					className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-white font-mono text-sm"
+					className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
 					rows={4}
 					placeholder='{"type": "daily_login"}'
 				/>
+				<p className="text-xs text-gray-400 mt-1">
+					{formData.category === "daily"
+						? '📆 Daily Task: {"type": "daily_login"} - resets every day'
+						: formData.category === "stardust"
+						? '✨ Stardust Task: {"type": "stardust_count", "threshold": 5000} - collect stardust'
+						: '🌑 Dark Matter Task: {"type": "dark_matter_count", "threshold": 1} - collect dark matter'}
+				</p>
 			</div>
 
-			<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-				<div>
-					<label className="block text-sm font-medium text-gray-300 mb-1">
-						Category
-					</label>
-					<select
-						value={formData.category || "general"}
-						onChange={(e) => updateField("category", e.target.value)}
-						className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-white"
+			{/* Check Type Configuration */}
+			<div className="mb-4">
+				<label className="block text-sm font-medium text-gray-300 mb-2">
+					Check Type
+				</label>
+				<select
+					value={formData.checkType || "stardust_count"}
+					onChange={(e) => updateField("checkType", e.target.value)}
+					className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+				>
+					<option value="stardust_count">Stardust Count</option>
+					<option value="dark_matter_count">Dark Matter Count</option>
+					<option value="stars_count">Stars Count</option>
+					<option value="galaxies_count">Galaxies Count</option>
+					<option value="scans_count">Scans Count</option>
+					<option value="streak_count">Streak Count</option>
+					<option value="daily_reset">Daily Reset</option>
+					<option value="galaxy_upgraded">Galaxy Upgraded</option>
+					<option value="galaxy_shared">Galaxy Shared</option>
+				</select>
+				<p className="text-xs text-gray-400 mt-1">
+					Select the type of condition check for this task
+				</p>
+			</div>
+
+			{/* Quick Examples Section */}
+			<div className="mb-6 p-4 bg-gray-800 border border-gray-600 rounded-md">
+				<h4 className="text-sm font-medium text-gray-300 mb-3">
+					🚀 Quick Examples - Click to load template
+				</h4>
+				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+					<button
+						type="button"
+						onClick={() => loadExample("daily_login")}
+						className="p-2 text-xs bg-blue-900 hover:bg-blue-800 border border-blue-600 rounded text-blue-200 hover:text-white transition-colors"
+						title="Daily login task: 100 stardust for logging in daily"
 					>
-						<option value="daily">Daily</option>
-						<option value="stardust">Stardust</option>
-						<option value="darkMatter">Dark Matter</option>
-						<option value="general">General</option>
-					</select>
+						📆 Daily Login
+					</button>
+					<button
+						type="button"
+						onClick={() => loadExample("stardust_collect")}
+						className="p-2 text-xs bg-green-900 hover:bg-green-800 border border-green-600 rounded text-green-200 hover:text-white transition-colors"
+						title="Collect stardust task: 1000 stardust for collecting 5,000 stardust"
+					>
+						✨ Collect Stardust
+					</button>
+					<button
+						type="button"
+						onClick={() => loadExample("galaxy_own")}
+						className="p-2 text-xs bg-purple-900 hover:bg-purple-800 border border-purple-600 rounded text-purple-200 hover:text-white transition-colors"
+						title="Own galaxies task: 3000 stardust for owning 2 galaxies"
+					>
+						🌌 Own Galaxies
+					</button>
+					<button
+						type="button"
+						onClick={() => loadExample("stars_create")}
+						className="p-2 text-xs bg-yellow-900 hover:bg-yellow-800 border border-yellow-600 rounded text-yellow-200 hover:text-white transition-colors"
+						title="Create stars task: 2000 stardust for creating 1,000 stars"
+					>
+						⭐ Create Stars
+					</button>
+					<button
+						type="button"
+						onClick={() => loadExample("artifact_collect")}
+						className="p-2 text-xs bg-red-900 hover:bg-red-800 border border-red-600 rounded text-red-200 hover:text-white transition-colors"
+						title="Scan galaxies task: 2000 stardust for scanning 10 galaxies"
+					>
+						🔭 Scan Galaxies
+					</button>
+					<button
+						type="button"
+						onClick={() => loadExample("custom")}
+						className="p-2 text-xs bg-gray-700 hover:bg-gray-600 border border-gray-500 rounded text-gray-300 hover:text-white transition-colors"
+						title="Custom task: template for creating your own task type"
+					>
+						🎯 Custom Task
+					</button>
 				</div>
-
-				<div>
-					<label className="block text-sm font-medium text-gray-300 mb-1">
-						Sort Order
-					</label>
-					<input
-						type="number"
-						value={formData.sortOrder || 0}
-						onChange={(e) =>
-							updateField("sortOrder", parseInt(e.target.value) || 0)
-						}
-						className="w-full p-2 bg-gray-700 border border-gray-600 rounded-md text-white"
-						min="0"
-						placeholder="0"
-					/>
-				</div>
+				<p className="text-xs text-gray-400 mt-3">
+					💡 <strong>Tip:</strong> Use these examples as starting points,
+					then customize the values, names, and descriptions to match your
+					needs!
+				</p>
 			</div>
 
-			<div className="flex items-center space-x-2">
-				<input
-					type="checkbox"
-					id="active"
-					checked={formData.active || false}
-					onChange={(e) => updateField("active", e.target.checked)}
-					aria-label="Set template as active"
-					className="rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500"
-				/>
-				<label htmlFor="active" className="text-sm text-gray-300">
-					Active
+			<div className="flex items-center space-x-4">
+				<label className="flex items-center">
+					<input
+						type="checkbox"
+						checked={formData.active ?? true}
+						onChange={(e) => updateField("active", e.target.checked)}
+						aria-label="Set template as active"
+						className="rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500"
+					/>
+					<span className="ml-2 text-gray-300">Active</span>
+				</label>
+
+				<label className="flex items-center">
+					<input
+						type="checkbox"
+						checked={formData.isDaily ?? false}
+						onChange={(e) => updateField("isDaily", e.target.checked)}
+						aria-label="Set template as daily task"
+						className="rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500"
+					/>
+					<span className="ml-2 text-gray-300">Daily Task</span>
 				</label>
 			</div>
 
-			<div className="flex justify-end space-x-2 pt-4">
+			<div className="flex justify-end space-x-2">
 				<button
 					onClick={onSubmit}
 					className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"

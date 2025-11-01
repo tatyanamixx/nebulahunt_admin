@@ -10,6 +10,8 @@ import {
 	Package,
 	AlertCircle,
 	FolderOpen,
+	Eye,
+	EyeOff,
 } from "lucide-react";
 
 export default function PackageTemplatesTab({ className = "" }) {
@@ -541,136 +543,188 @@ export default function PackageTemplatesTab({ className = "" }) {
 						</button>
 					</div>
 				) : (
-					<div className="space-y-4">
+					<div className="grid grid-cols-1 gap-4">
 						{templates.map((template) => (
 							<div
 								key={template.slug}
 								className={`${getPackageCardColor(
 									template
-								)} rounded-lg p-4 border shadow-lg hover:opacity-90 transition-all duration-200`}
+								)} rounded-lg p-6 border-2 shadow-lg transition-all duration-200 hover:shadow-xl`}
 							>
-								<div className="flex items-center justify-between">
+								{/* Header Section */}
+								<div className="flex items-center space-x-3 mb-4">
+									<div className="text-4xl">
+										{getResourceIcon(template)}
+									</div>
 									<div className="flex-1">
-										<div className="flex items-center space-x-3 mb-2">
-											<span className="text-2xl">
-												{getResourceIcon(template)}
-											</span>
-											<div>
-												<h3 className="text-lg font-semibold text-white">
-													{template.name}
-												</h3>
-												<span className="text-sm text-gray-300">
-													({template.slug})
-												</span>
-											</div>
+										<div className="flex items-center space-x-2 mb-1">
+											<h3 className="text-xl font-bold text-white">
+												{template.name}
+											</h3>
 											{template.isPromoted && (
-												<span className="px-2 py-1 text-xs bg-yellow-600 text-white rounded">
+												<span className="px-2 py-0.5 text-xs font-semibold bg-yellow-600 text-white rounded">
 													Promoted
 												</span>
 											)}
 											{!template.status && (
-												<span className="px-2 py-1 text-xs bg-red-600 text-white rounded">
+												<span className="px-2 py-0.5 text-xs font-semibold bg-red-600 text-white rounded">
 													Disabled
 												</span>
 											)}
 										</div>
-										{template.description && (
-											<p className="text-gray-300 mb-2">
-												{template.description}
-											</p>
-										)}
-										<div className="space-y-2 text-sm">
-											{/* New structure fields */}
-											<div className="flex items-center">
-												<span className="text-gray-400 w-24">
-													Category:
-												</span>
-												<span className="text-white font-medium">
-													{template.category || "N/A"}
-												</span>
-											</div>
-											<div className="flex items-center">
-												<span className="text-gray-400 w-24">
-													Action:
-												</span>
-												<span className="text-white font-medium">
-													{template.actionType || "N/A"}
-												</span>
-											</div>
-											<div className="flex items-center">
-												<span className="text-gray-400 w-24">
-													Target:
-												</span>
-												<span className="text-white font-medium">
-													{template.actionTarget || "N/A"}
-												</span>
-											</div>
-											<div className="flex items-center">
-												<span className="text-gray-400 w-24">
-													Sort Order:
-												</span>
-												<span className="text-white font-medium">
-													{template.sortOrder || 0}
-												</span>
-											</div>
+										<p className="text-sm text-gray-400 font-mono">
+											{template.slug}
+										</p>
+									</div>
+								</div>
 
-											<div className="flex items-start">
-												<span className="text-gray-400 w-24">
-													Label Key:
-												</span>
-												<span className="text-white font-medium break-all max-w-md">
-													{template.labelKey || "N/A"}
-												</span>
+								{/* Description */}
+								{template.description && (
+									<p className="text-white mb-4 text-sm leading-relaxed">
+										{template.description}
+									</p>
+								)}
+
+								{/* Main Info Grid */}
+								<div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+									<div className="bg-black bg-opacity-30 rounded-lg p-3">
+										<div className="text-xs text-gray-300 mb-1">
+											Category
+										</div>
+										<div className="text-lg font-bold text-white">
+											{template.category || "N/A"}
+										</div>
+									</div>
+									<div className="bg-black bg-opacity-30 rounded-lg p-3">
+										<div className="text-xs text-gray-300 mb-1">
+											Action Type
+										</div>
+										<div className="text-sm font-bold text-white flex items-center space-x-1">
+											<span>
+												{getActionTypeIcon(template)}
+											</span>
+											<span>
+												{template.actionType || "N/A"}
+											</span>
+										</div>
+									</div>
+									<div className="bg-black bg-opacity-30 rounded-lg p-3">
+										<div className="text-xs text-gray-300 mb-1">
+											Target
+										</div>
+										<div className="text-sm font-bold text-white">
+											{template.actionTarget || "N/A"}
+										</div>
+									</div>
+									<div className="bg-black bg-opacity-30 rounded-lg p-3">
+										<div className="text-xs text-gray-300 mb-1">
+											Sort Order
+										</div>
+										<div className="text-lg font-bold text-white">
+											{template.sortOrder || 0}
+										</div>
+									</div>
+								</div>
+
+								{/* Additional Info */}
+								<div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm mb-4">
+									{template.actionData && (
+										<div className="bg-black bg-opacity-30 rounded-lg p-3">
+											<div className="text-xs text-gray-300 mb-1 font-semibold">
+												Action Data:
+											</div>
+											<div className="text-xs font-mono text-gray-200">
+												{JSON.stringify(
+													template.actionData,
+													null,
+													2
+												)}
+											</div>
+										</div>
+									)}
+									{template.costData && (
+										<div className="bg-black bg-opacity-30 rounded-lg p-3">
+											<div className="text-xs text-gray-300 mb-1 font-semibold">
+												Cost Data:
+											</div>
+											<div className="text-xs font-mono text-gray-200">
+												{JSON.stringify(
+													template.costData,
+													null,
+													2
+												)}
+											</div>
+										</div>
+									)}
+								</div>
+
+								{/* Label Key */}
+								{template.labelKey && (
+									<div className="mb-4">
+										<div className="bg-black bg-opacity-30 rounded-lg p-3">
+											<div className="text-xs text-gray-300 mb-1">
+												Label Key
+											</div>
+											<div className="text-sm font-semibold text-white break-all">
+												{template.labelKey}
 											</div>
 										</div>
 									</div>
-									<div className="flex space-x-2 ml-4">
-										<button
-											onClick={() =>
-												downloadTemplate(template)
-											}
-											title="Export template as JSON"
-											className="inline-flex items-center px-2 py-1 text-xs bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors"
-										>
-											<Download className="h-3 w-3 mr-1" />
-											Export
-										</button>
-										<button
-											onClick={() => openEditModal(template)}
-											title="Edit template"
-											className="inline-flex items-center px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
-										>
-											<Edit className="h-3 w-3 mr-1" />
-											Edit
-										</button>
-										<button
-											onClick={() =>
-												handleToggleStatus(template.slug)
-											}
-											title={
-												template.status
-													? "Disable template"
-													: "Enable template"
-											}
-											className={`inline-flex items-center px-2 py-1 text-xs rounded transition-colors ${
-												template.status
-													? "bg-yellow-600 hover:bg-yellow-700 text-white"
-													: "bg-green-600 hover:bg-green-700 text-white"
-											}`}
-										>
-											{template.status ? "Disable" : "Enable"}
-										</button>
-										<button
-											onClick={() =>
-												handleDeleteTemplate(template)
-											}
-											title="Delete template"
-											className="inline-flex items-center px-2 py-1 text-xs bg-red-600 hover:bg-red-700 text-white rounded transition-colors"
-										>
-											<Trash2 className="h-3 w-3 mr-1" />
-											Delete
-										</button>
-									</div>
+								)}
+
+								{/* Action Buttons */}
+								<div className="mt-4 pt-4 border-t border-white border-opacity-20 flex justify-end space-x-2">
+									<button
+										onClick={() => downloadTemplate(template)}
+										title="Export"
+										className="inline-flex items-center px-3 py-2 text-xs bg-gray-700 hover:bg-gray-600 text-white rounded-md transition-colors"
+									>
+										<Download className="h-4 w-4 mr-1" />
+										Export
+									</button>
+									<button
+										onClick={() => openEditModal(template)}
+										title="Edit"
+										className="inline-flex items-center px-3 py-2 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+									>
+										<Edit className="h-4 w-4 mr-1" />
+										Edit
+									</button>
+									<button
+										onClick={() =>
+											handleToggleStatus(template.slug)
+										}
+										title={
+											template.status ? "Disable" : "Enable"
+										}
+										className={`inline-flex items-center px-3 py-2 text-xs rounded-md transition-colors ${
+											template.status
+												? "bg-yellow-600 hover:bg-yellow-700"
+												: "bg-green-600 hover:bg-green-700"
+										} text-white`}
+									>
+										{template.status ? (
+											<>
+												<EyeOff className="h-4 w-4 mr-1" />
+												Disable
+											</>
+										) : (
+											<>
+												<Eye className="h-4 w-4 mr-1" />
+												Enable
+											</>
+										)}
+									</button>
+									<button
+										onClick={() =>
+											handleDeleteTemplate(template)
+										}
+										title="Delete"
+										className="inline-flex items-center px-3 py-2 text-xs bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors"
+									>
+										<Trash2 className="h-4 w-4 mr-1" />
+										Delete
+									</button>
 								</div>
 							</div>
 						))}

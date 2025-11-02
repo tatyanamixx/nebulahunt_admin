@@ -23,4 +23,13 @@ export default defineConfig({
 			},
 		},
 	},
+	preview: {
+		port: 4173,
+		host: "0.0.0.0",
+		allowedHosts: [
+			"admin.nebulahunt.site",
+			"localhost",
+			"127.0.0.1",
+		],
+	},
 });

@@ -1,4 +1,15 @@
-.react-router
-build
 node_modules
+dist
+build
+.env
+.env.local
+.env.production
+.env.development
+.git
+.gitignore
 README.md
+*.log
+.DS_Store
+coverage
+.vscode
+.idea

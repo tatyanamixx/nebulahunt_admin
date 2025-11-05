@@ -42,7 +42,7 @@ export function InvitationsTab({
 
 		try {
 			setIsSubmitting(true);
-			await api.post("/admin/invites", {
+			await api.post("/admin/invite", {
 				email: inviteEmail.trim(),
 				name: inviteName.trim(),
 				role: inviteRole,

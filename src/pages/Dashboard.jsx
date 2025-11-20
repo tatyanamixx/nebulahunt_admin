@@ -9,6 +9,14 @@ export default function Dashboard() {
 	const [sending, setSending] = useState(false);
 	const [message, setMessage] = useState(null);
 
+	// Custom notification state
+	const [customMessage, setCustomMessage] = useState("");
+	const [customUserIds, setCustomUserIds] = useState("");
+	const [showOpenGameButton, setShowOpenGameButton] = useState(false);
+	const [showCommunityButton, setShowCommunityButton] = useState(false);
+	const [sendingCustom, setSendingCustom] = useState(false);
+	const [customMessageResult, setCustomMessageResult] = useState(null);
+
 	// Не показываем компонент, если пользователь не аутентифицирован
 	if (!isAuthenticated) {
 		return null;
@@ -32,14 +40,20 @@ export default function Dashboard() {
 	};
 
 	const handleSendReminders = async () => {
-		if (!confirm("Send reminder notifications to all inactive users?")) {
+		if (
+			!confirm(
+				"Send reminder notifications to ALL users with reminders enabled? (Force mode)"
+			)
+		) {
 			return;
 		}
 
 		try {
 			setSending(true);
 			setMessage(null);
-			const response = await api.post("/admin/reminders/trigger", {});
+			const response = await api.post("/admin/reminders/trigger", {
+				force: true,
+			});
 
 			setMessage({
 				type: "success",
@@ -58,6 +72,69 @@ export default function Dashboard() {
 			});
 		} finally {
 			setSending(false);
+		}
+	};
+
+	const handleSendCustomNotification = async () => {
+		if (!customMessage.trim()) {
+			setCustomMessageResult({
+				type: "error",
+				text: "Message is required",
+			});
+			return;
+		}
+
+		const userIdsArray = customUserIds
+			.split(",")
+			.map((id) => id.trim())
+			.filter((id) => id.length > 0);
+
+		if (userIdsArray.length === 0) {
+			setCustomMessageResult({
+				type: "error",
+				text: "At least one user ID is required",
+			});
+			return;
+		}
+
+		if (
+			!confirm(`Send custom notification to ${userIdsArray.length} user(s)?`)
+		) {
+			return;
+		}
+
+		try {
+			setSendingCustom(true);
+			setCustomMessageResult(null);
+			const response = await api.post("/admin/reminders/send-custom", {
+				message: customMessage.trim(),
+				userIds: userIdsArray,
+				showOpenGameButton,
+				showCommunityButton,
+			});
+
+			setCustomMessageResult({
+				type: "success",
+				text:
+					response.data.message ||
+					`Custom notification sent to ${userIdsArray.length} user(s)!`,
+			});
+
+			// Clear form
+			setCustomMessage("");
+			setCustomUserIds("");
+			setShowOpenGameButton(false);
+			setShowCommunityButton(false);
+		} catch (error) {
+			console.error("Failed to send custom notification:", error);
+			setCustomMessageResult({
+				type: "error",
+				text:
+					error.response?.data?.message ||
+					"Failed to send custom notification. Check console for details.",
+			});
+		} finally {
+			setSendingCustom(false);
 		}
 	};
 
@@ -136,6 +213,103 @@ export default function Dashboard() {
 					<br />
 					This button manually triggers immediate reminder checks and sends
 					notifications to inactive users.
+				</p>
+			</div>
+
+			{/* Custom Notification Card */}
+			<div className="bg-gray-800 shadow rounded-lg border border-gray-700 p-6">
+				<h2 className="text-lg font-medium text-white mb-4">
+					📨 Custom Notifications
+				</h2>
+
+				{/* Message */}
+				{customMessageResult && (
+					<div
+						className={`mb-4 p-4 rounded ${
+							customMessageResult.type === "success"
+								? "bg-green-900/30 border border-green-600 text-green-400"
+								: "bg-red-900/30 border border-red-600 text-red-400"
+						}`}
+					>
+						{customMessageResult.text}
+					</div>
+				)}
+
+				{/* Message Text */}
+				<div className="mb-4">
+					<label className="block text-sm font-medium text-gray-300 mb-2">
+						Message Text (HTML supported)
+					</label>
+					<textarea
+						value={customMessage}
+						onChange={(e) => setCustomMessage(e.target.value)}
+						placeholder="Enter your custom message here..."
+						className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+						rows={4}
+					/>
+				</div>
+
+				{/* User IDs */}
+				<div className="mb-4">
+					<label className="block text-sm font-medium text-gray-300 mb-2">
+						User IDs (comma-separated)
+					</label>
+					<input
+						type="text"
+						value={customUserIds}
+						onChange={(e) => setCustomUserIds(e.target.value)}
+						placeholder="123456789, 987654321, ..."
+						className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+					/>
+				</div>
+
+				{/* Buttons */}
+				<div className="mb-4">
+					<label className="block text-sm font-medium text-gray-300 mb-2">
+						Buttons
+					</label>
+					<div className="space-y-2">
+						<label className="flex items-center space-x-2 cursor-pointer">
+							<input
+								type="checkbox"
+								checked={showOpenGameButton}
+								onChange={(e) =>
+									setShowOpenGameButton(e.target.checked)
+								}
+								className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
+							/>
+							<span className="text-gray-300">🎮 Open Game</span>
+						</label>
+						<label className="flex items-center space-x-2 cursor-pointer">
+							<input
+								type="checkbox"
+								checked={showCommunityButton}
+								onChange={(e) =>
+									setShowCommunityButton(e.target.checked)
+								}
+								className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
+							/>
+							<span className="text-gray-300">💬 Community</span>
+						</label>
+					</div>
+				</div>
+
+				{/* Send Button */}
+				<button
+					onClick={handleSendCustomNotification}
+					disabled={
+						sendingCustom ||
+						!customMessage.trim() ||
+						!customUserIds.trim()
+					}
+					className="w-full md:w-auto px-6 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+				>
+					{sendingCustom ? "Sending..." : "📤 Send Custom Notification"}
+				</button>
+
+				<p className="text-sm text-gray-400 mt-4">
+					💡 Enter user IDs separated by commas. You can add buttons to the
+					message by checking the boxes above.
 				</p>
 			</div>
 

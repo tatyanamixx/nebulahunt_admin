@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext.jsx";
-import axios from "axios";
-
-const API_URL = import.meta.env.VITE_API_URL || "https://nebulahunt.site/api";
+import api from "../lib/api.js";
 
 export default function Dashboard() {
 	const { isAuthenticated } = useAuth();
@@ -24,13 +22,7 @@ export default function Dashboard() {
 	const loadStats = async () => {
 		try {
 			setLoading(true);
-			const token = localStorage.getItem("accessToken");
-			const response = await axios.get(`${API_URL}/admin/reminders/stats`, {
-				headers: {
-					Authorization: `Bearer ${token}`,
-				},
-				withCredentials: true,
-			});
+			const response = await api.get("/admin/reminders/stats");
 			setReminderStats(response.data.stats);
 		} catch (error) {
 			console.error("Failed to load reminder stats:", error);
@@ -47,17 +39,7 @@ export default function Dashboard() {
 		try {
 			setSending(true);
 			setMessage(null);
-			const token = localStorage.getItem("accessToken");
-			const response = await axios.post(
-				`${API_URL}/admin/reminders/trigger`,
-				{},
-				{
-					headers: {
-						Authorization: `Bearer ${token}`,
-					},
-					withCredentials: true,
-				}
-			);
+			const response = await api.post("/admin/reminders/trigger", {});
 
 			setMessage({
 				type: "success",

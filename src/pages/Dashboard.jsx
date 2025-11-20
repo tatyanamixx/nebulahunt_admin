@@ -136,6 +136,16 @@ export default function Dashboard() {
 				</p>
 			</div>
 
+			{/* Info Card */}
+			<div className="bg-gray-800 shadow rounded-lg border border-gray-700 p-6">
+				<h2 className="text-lg font-medium text-white mb-4">
+					Welcome to Admin Panel
+				</h2>
+				<p className="text-gray-400">
+					Use the menu on the left to navigate through different sections.
+				</p>
+			</div>
+
 			{/* Reminder Management Card */}
 			<div className="bg-gray-800 shadow rounded-lg border border-gray-700 p-6">
 				<h2 className="text-lg font-medium text-white mb-4">
@@ -285,16 +295,6 @@ export default function Dashboard() {
 				<p className="text-sm text-gray-400 mt-4">
 					💡 Notification will be sent to ALL users. You can add buttons to
 					the message by checking the boxes above.
-				</p>
-			</div>
-
-			{/* Info Card */}
-			<div className="bg-gray-800 shadow rounded-lg border border-gray-700 p-6">
-				<h2 className="text-lg font-medium text-white mb-4">
-					Welcome to Admin Panel
-				</h2>
-				<p className="text-gray-400">
-					Use the menu on the left to navigate through different sections.
 				</p>
 			</div>
 		</div>

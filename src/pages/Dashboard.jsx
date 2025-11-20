@@ -24,7 +24,7 @@ export default function Dashboard() {
 	const loadStats = async () => {
 		try {
 			setLoading(true);
-			const token = localStorage.getItem("token");
+			const token = localStorage.getItem("accessToken");
 			const response = await axios.get(`${API_URL}/admin/reminders/stats`, {
 				headers: {
 					Authorization: `Bearer ${token}`,
@@ -47,7 +47,7 @@ export default function Dashboard() {
 		try {
 			setSending(true);
 			setMessage(null);
-			const token = localStorage.getItem("token");
+			const token = localStorage.getItem("accessToken");
 			const response = await axios.post(
 				`${API_URL}/admin/reminders/trigger`,
 				{},

@@ -29,6 +29,7 @@ export default function Dashboard() {
 				headers: {
 					Authorization: `Bearer ${token}`,
 				},
+				withCredentials: true,
 			});
 			setReminderStats(response.data.stats);
 		} catch (error) {
@@ -54,6 +55,7 @@ export default function Dashboard() {
 					headers: {
 						Authorization: `Bearer ${token}`,
 					},
+					withCredentials: true,
 				}
 			);
 

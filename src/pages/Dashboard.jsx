@@ -11,7 +11,6 @@ export default function Dashboard() {
 
 	// Custom notification state
 	const [customMessage, setCustomMessage] = useState("");
-	const [customUserIds, setCustomUserIds] = useState("");
 	const [showOpenGameButton, setShowOpenGameButton] = useState(false);
 	const [showCommunityButton, setShowCommunityButton] = useState(false);
 	const [sendingCustom, setSendingCustom] = useState(false);
@@ -84,21 +83,10 @@ export default function Dashboard() {
 			return;
 		}
 
-		const userIdsArray = customUserIds
-			.split(",")
-			.map((id) => id.trim())
-			.filter((id) => id.length > 0);
-
-		if (userIdsArray.length === 0) {
-			setCustomMessageResult({
-				type: "error",
-				text: "At least one user ID is required",
-			});
-			return;
-		}
-
 		if (
-			!confirm(`Send custom notification to ${userIdsArray.length} user(s)?`)
+			!confirm(
+				"Send custom notification to ALL users? This may take a while..."
+			)
 		) {
 			return;
 		}
@@ -108,7 +96,7 @@ export default function Dashboard() {
 			setCustomMessageResult(null);
 			const response = await api.post("/admin/reminders/send-custom", {
 				message: customMessage.trim(),
-				userIds: userIdsArray,
+				userIds: null, // null = send to all users
 				showOpenGameButton,
 				showCommunityButton,
 			});
@@ -117,12 +105,13 @@ export default function Dashboard() {
 				type: "success",
 				text:
 					response.data.message ||
-					`Custom notification sent to ${userIdsArray.length} user(s)!`,
+					`Custom notification sent! Sent: ${
+						response.data.data?.sent || 0
+					}, Failed: ${response.data.data?.failed || 0}`,
 			});
 
 			// Clear form
 			setCustomMessage("");
-			setCustomUserIds("");
 			setShowOpenGameButton(false);
 			setShowCommunityButton(false);
 		} catch (error) {
@@ -238,29 +227,19 @@ export default function Dashboard() {
 				{/* Message Text */}
 				<div className="mb-4">
 					<label className="block text-sm font-medium text-gray-300 mb-2">
-						Message Text (HTML supported)
+						Message Text
 					</label>
 					<textarea
 						value={customMessage}
 						onChange={(e) => setCustomMessage(e.target.value)}
-						placeholder="Enter your custom message here..."
+						placeholder="Enter your message here... You can use line breaks and emojis 🚀"
 						className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-						rows={4}
+						rows={6}
 					/>
-				</div>
-
-				{/* User IDs */}
-				<div className="mb-4">
-					<label className="block text-sm font-medium text-gray-300 mb-2">
-						User IDs (comma-separated)
-					</label>
-					<input
-						type="text"
-						value={customUserIds}
-						onChange={(e) => setCustomUserIds(e.target.value)}
-						placeholder="123456789, 987654321, ..."
-						className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-					/>
+					<p className="text-xs text-gray-400 mt-1">
+						💡 Just write your text with line breaks and emojis - no HTML
+						needed!
+					</p>
 				</div>
 
 				{/* Buttons */}
@@ -297,19 +276,15 @@ export default function Dashboard() {
 				{/* Send Button */}
 				<button
 					onClick={handleSendCustomNotification}
-					disabled={
-						sendingCustom ||
-						!customMessage.trim() ||
-						!customUserIds.trim()
-					}
+					disabled={sendingCustom || !customMessage.trim()}
 					className="w-full md:w-auto px-6 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
 				>
 					{sendingCustom ? "Sending..." : "📤 Send Custom Notification"}
 				</button>
 
 				<p className="text-sm text-gray-400 mt-4">
-					💡 Enter user IDs separated by commas. You can add buttons to the
-					message by checking the boxes above.
+					💡 Notification will be sent to ALL users. You can add buttons to
+					the message by checking the boxes above.
 				</p>
 			</div>
 

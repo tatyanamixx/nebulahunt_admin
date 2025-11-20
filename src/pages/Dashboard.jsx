@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext.jsx";
-import api from "../lib/api.js";
+import { api } from "../lib/api.js";
 
 export default function Dashboard() {
 	const { isAuthenticated } = useAuth();

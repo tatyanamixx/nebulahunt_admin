@@ -9,7 +9,7 @@ import {
 	Zap,
 	Coins,
 	TrendingUp,
-	Galaxy,
+	Sparkles,
 	Activity,
 	User,
 	Calendar,
@@ -404,7 +404,7 @@ export default function UserDetail() {
 				</div>
 				{galaxies.length === 0 ? (
 					<div className="text-gray-400 text-center py-8">
-						<Galaxy className="h-12 w-12 mx-auto mb-4 text-gray-500" />
+						<Sparkles className="h-12 w-12 mx-auto mb-4 text-gray-500" />
 						<p>No galaxies found</p>
 					</div>
 				) : (

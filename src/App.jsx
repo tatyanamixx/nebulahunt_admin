@@ -9,6 +9,8 @@ import AdminSettingsWithTabs from "./pages/AdminSettingsWithTabs.jsx";
 import Settings from "./pages/Settings.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Users from "./pages/Users.jsx";
+import UserDetail from "./pages/UserDetail.jsx";
+import Transactions from "./pages/Transactions.jsx";
 import GameSettings from "./pages/GameSettings.jsx";
 import TokenInfo from "./pages/TokenInfo.jsx";
 import Layout from "./components/Layout.jsx";
@@ -56,6 +58,8 @@ function AppRoutes() {
 				<Route path="/" element={<Navigate to="/dashboard" replace />} />
 				<Route path="/dashboard" element={<Dashboard />} />
 				<Route path="/users" element={<Users />} />
+				<Route path="/users/:userId" element={<UserDetail />} />
+				<Route path="/transactions" element={<Transactions />} />
 				<Route path="/game-settings" element={<GameSettings />} />
 				<Route path="/settings" element={<Settings />} />
 				<Route

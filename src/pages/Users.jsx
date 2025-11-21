@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { api } from '../lib/api.js';
 import {
@@ -18,6 +19,7 @@ import {
 } from 'lucide-react';
 
 export default function Users() {
+	const navigate = useNavigate();
 	const { isAuthenticated, loading: authLoading } = useAuth();
 	const [users, setUsers] = useState([]);
 	const [loading, setLoading] = useState(true);
@@ -391,6 +393,12 @@ export default function Users() {
 
 									{/* Actions */}
 									<div className='flex items-center justify-start sm:justify-end space-x-2 sm:ml-4'>
+										<button
+											onClick={() => navigate(`/users/${user.id}`)}
+											className='inline-flex items-center px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-colors bg-blue-600 hover:bg-blue-700 text-white'>
+											<User className='h-4 w-4 mr-1' />
+											View Details
+										</button>
 										<button
 											onClick={() =>
 												toggleUserBlock(

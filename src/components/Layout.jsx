@@ -10,6 +10,7 @@ import {
 	Shield,
 	Table,
 	Gamepad2,
+	Activity,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "../lib/utils.js";
@@ -22,6 +23,7 @@ import SimpleDebugButton from "./SimpleDebugButton.jsx";
 const navigation = [
 	{ name: "Dashboard", href: "/", icon: LayoutDashboard },
 	{ name: "Users", href: "/users", icon: Users },
+	{ name: "Transactions", href: "/transactions", icon: Activity },
 	{ name: "Game Settings", href: "/game-settings", icon: Gamepad2 },
 	{
 		name: "Admin Settings",

@@ -255,20 +255,20 @@ export default function Transactions() {
 											<td className="py-2 px-4 text-gray-300 text-sm text-right">
 												{/* Показываем положительную сумму для транзакций от системы к пользователю */}
 												{(() => {
-													const amount = parseFloat(tx.priceOrAmount);
+													const rawAmount = parseFloat(tx.priceOrAmount);
 													const fromSystem = isSystemAccount(tx.fromAccount);
 													const toUser = !isSystemAccount(tx.toAccount);
 													
-													// Если транзакция от системы к пользователю - показываем положительную сумму
+													// Если транзакция от системы к пользователю - всегда показываем положительную сумму
 													if (fromSystem && toUser) {
-														return Math.abs(amount).toLocaleString();
+														return Math.abs(rawAmount).toLocaleString();
 													}
 													// Если транзакция от пользователя к системе - показываем отрицательную
 													if (!fromSystem && isSystemAccount(tx.toAccount)) {
-														return `-${Math.abs(amount).toLocaleString()}`;
+														return `-${Math.abs(rawAmount).toLocaleString()}`;
 													}
-													// Остальные случаи - показываем как есть
-													return amount.toLocaleString();
+													// Остальные случаи - показываем абсолютное значение
+													return Math.abs(rawAmount).toLocaleString();
 												})()}
 											</td>
 											<td className="py-2 px-4 text-gray-300 text-sm">

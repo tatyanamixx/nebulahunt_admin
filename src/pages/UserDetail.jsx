@@ -168,8 +168,18 @@ export default function UserDetail() {
 			REFERRER_REWARD: "Referrer Reward",
 			REFEREE_REWARD: "Referee Reward",
 			REGISTRATION_BONUS: "Registration Bonus",
+			BUYER_TO_CONTRACT: "Buyer to Contract",
+			CONTRACT_TO_SELLER: "Contract to Seller",
+			FEE: "Fee",
+			STARS_TRANSFER: "Stars Transfer",
+			STARDUST_TRANSFER: "Stardust Transfer",
+			DARK_MATTER_TRANSFER: "Dark Matter Transfer",
 		};
 		return labels[txType] || txType;
+	};
+
+	const isSystemAccount = (accountId) => {
+		return accountId === 1000000000000000 || accountId === "1000000000000000";
 	};
 
 	if (authLoading) {

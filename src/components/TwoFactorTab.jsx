@@ -111,13 +111,13 @@ export function TwoFactorTab({
 	};
 
 	return (
-		<div className="space-y-6">
+		<div className="space-y-4 sm:space-y-6">
 			{/* 2FA Status */}
-			<div className="bg-gray-700 shadow rounded-lg border border-gray-600 p-6">
-				<h2 className="text-lg font-medium text-white mb-4">
+			<div className="bg-gray-700 shadow rounded-lg border border-gray-600 p-4 sm:p-6">
+				<h2 className="text-base sm:text-lg font-medium text-white mb-3 sm:mb-4">
 					🔐 Two-Factor Authentication
 				</h2>
-				<p className="text-gray-400 mb-4">
+				<p className="text-xs sm:text-sm text-gray-400 mb-4">
 					Two-factor authentication adds an extra layer of security to your
 					account by requiring a code from your phone in addition to your
 					password.
@@ -131,18 +131,18 @@ export function TwoFactorTab({
 								now more secure.
 							</p>
 						</div>
-						<div className="flex space-x-3">
+						<div className="flex flex-col sm:flex-row gap-2 sm:space-x-3">
 							<button
 								onClick={handleGet2FAInfo}
 								disabled={loading}
-								className="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 disabled:opacity-50"
+								className="w-full sm:w-auto px-4 py-2 bg-blue-600 border border-transparent rounded-md text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 disabled:opacity-50 text-sm"
 							>
 								{loading ? "Loading..." : "📱 Get QR Code"}
 							</button>
 							<button
 								onClick={handleDisable2FA}
 								disabled={loading}
-								className="px-4 py-2 border border-red-600 rounded-md text-red-300 hover:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-gray-800 disabled:opacity-50"
+								className="w-full sm:w-auto px-4 py-2 border border-red-600 rounded-md text-red-300 hover:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-gray-800 disabled:opacity-50 text-sm"
 							>
 								{loading ? "Disabling..." : "Disable 2FA"}
 							</button>
@@ -163,9 +163,9 @@ export function TwoFactorTab({
 
 			{/* 2FA Setup Form */}
 			{show2FASetup && (
-				<div className="space-y-6">
-					<div className="bg-gray-700 p-6 rounded-lg border border-gray-600">
-						<h3 className="text-lg font-medium text-white mb-4">
+				<div className="space-y-4 sm:space-y-6">
+					<div className="bg-gray-700 p-4 sm:p-6 rounded-lg border border-gray-600">
+						<h3 className="text-base sm:text-lg font-medium text-white mb-3 sm:mb-4">
 							📱 Google Authenticator Setup
 						</h3>
 
@@ -323,11 +323,11 @@ export function TwoFactorTab({
 									Authenticator app
 								</p>
 							</div>
-							<div className="flex space-x-3">
+							<div className="flex flex-col sm:flex-row gap-2 sm:space-x-3">
 								<button
 									type="submit"
 									disabled={loading || !otp || otp.length !== 6}
-									className="flex-1 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+									className="flex-1 py-2 px-4 border border-transparent rounded-md shadow-sm text-xs sm:text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
 								>
 									{loading ? (
 										<div className="flex items-center justify-center">

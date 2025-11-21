@@ -142,16 +142,16 @@ export default function Dashboard() {
 	};
 
 	return (
-		<div className="space-y-6">
+		<div className="space-y-4 sm:space-y-6">
 			<div>
-				<h1 className="text-2xl font-bold text-white">Dashboard</h1>
-				<p className="mt-1 text-sm text-gray-400">
+				<h1 className="text-xl sm:text-2xl font-bold text-white">Dashboard</h1>
+				<p className="mt-1 text-xs sm:text-sm text-gray-400">
 					Welcome to the admin panel
 				</p>
 			</div>
 
 			{/* Info Card */}
-			<div className="bg-gray-800 shadow rounded-lg border border-gray-700 p-6">
+			<div className="bg-gray-800 shadow rounded-lg border border-gray-700 p-4 sm:p-6">
 				<h2 className="text-lg font-medium text-white mb-4">
 					Welcome to Admin Panel
 				</h2>
@@ -161,37 +161,37 @@ export default function Dashboard() {
 			</div>
 
 			{/* Reminder Management Card */}
-			<div className="bg-gray-800 shadow rounded-lg border border-gray-700 p-6">
-				<h2 className="text-lg font-medium text-white mb-4">
+			<div className="bg-gray-800 shadow rounded-lg border border-gray-700 p-4 sm:p-6">
+				<h2 className="text-base sm:text-lg font-medium text-white mb-4">
 					📬 Reminder Notifications
 				</h2>
 
 				{/* Stats */}
 				{loading ? (
-					<p className="text-gray-400 mb-4">Loading stats...</p>
+					<p className="text-gray-400 mb-4 text-sm">Loading stats...</p>
 				) : reminderStats ? (
-					<div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-						<div className="bg-gray-700 p-4 rounded">
-							<div className="text-gray-400 text-sm">Enabled</div>
-							<div className="text-2xl font-bold text-green-400">
+					<div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
+						<div className="bg-gray-700 p-3 sm:p-4 rounded">
+							<div className="text-gray-400 text-xs sm:text-sm">Enabled</div>
+							<div className="text-xl sm:text-2xl font-bold text-green-400">
 								{reminderStats.enabled}
 							</div>
 						</div>
-						<div className="bg-gray-700 p-4 rounded">
-							<div className="text-gray-400 text-sm">Disabled</div>
-							<div className="text-2xl font-bold text-gray-400">
+						<div className="bg-gray-700 p-3 sm:p-4 rounded">
+							<div className="text-gray-400 text-xs sm:text-sm">Disabled</div>
+							<div className="text-xl sm:text-2xl font-bold text-gray-400">
 								{reminderStats.disabled}
 							</div>
 						</div>
-						<div className="bg-gray-700 p-4 rounded">
-							<div className="text-gray-400 text-sm">Sent (24h)</div>
-							<div className="text-2xl font-bold text-blue-400">
+						<div className="bg-gray-700 p-3 sm:p-4 rounded">
+							<div className="text-gray-400 text-xs sm:text-sm">Sent (24h)</div>
+							<div className="text-xl sm:text-2xl font-bold text-blue-400">
 								{reminderStats.recentlyNotified}
 							</div>
 						</div>
-						<div className="bg-gray-700 p-4 rounded">
-							<div className="text-gray-400 text-sm">Never Sent</div>
-							<div className="text-2xl font-bold text-yellow-400">
+						<div className="bg-gray-700 p-3 sm:p-4 rounded">
+							<div className="text-gray-400 text-xs sm:text-sm">Never Sent</div>
+							<div className="text-xl sm:text-2xl font-bold text-yellow-400">
 								{reminderStats.neverNotified}
 							</div>
 						</div>
@@ -230,8 +230,8 @@ export default function Dashboard() {
 			</div>
 
 			{/* Custom Notification Card */}
-			<div className="bg-gray-800 shadow rounded-lg border border-gray-700 p-6">
-				<h2 className="text-lg font-medium text-white mb-4">
+			<div className="bg-gray-800 shadow rounded-lg border border-gray-700 p-4 sm:p-6">
+				<h2 className="text-base sm:text-lg font-medium text-white mb-4">
 					📨 Custom Notifications
 				</h2>
 
@@ -250,15 +250,15 @@ export default function Dashboard() {
 
 				{/* Message Text */}
 				<div className="mb-4">
-					<label className="block text-sm font-medium text-gray-300 mb-2">
+					<label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">
 						Message Text
 					</label>
 					<textarea
 						value={customMessage}
 						onChange={(e) => setCustomMessage(e.target.value)}
 						placeholder="Enter your message here... You can use line breaks and emojis 🚀"
-						className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-						rows={6}
+						className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+						rows={4}
 					/>
 					<p className="text-xs text-gray-400 mt-1">
 						💡 Just write your text with line breaks and emojis - no HTML

@@ -89,25 +89,25 @@ export default function TokenInfo() {
 	}
 
 	return (
-		<div className='min-h-screen bg-gray-900 py-8 px-4'>
+		<div className='min-h-screen bg-gray-900 py-4 sm:py-8 px-4'>
 			<div className='max-w-4xl mx-auto'>
-				<div className='bg-gray-800 rounded-lg shadow-lg p-6'>
-					<div className='flex justify-between items-center mb-6'>
-						<h1 className='text-3xl font-bold text-white'>
+				<div className='bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6'>
+					<div className='flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4 sm:mb-6'>
+						<h1 className='text-xl sm:text-2xl lg:text-3xl font-bold text-white'>
 							JWT Token Information
 						</h1>
-						<div className='space-x-4'>
+						<div className='flex flex-col sm:flex-row gap-2 sm:space-x-4'>
 							<button
 								onClick={handleRefreshToken}
 								disabled={isRefreshing}
-								className='px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50'>
+								className='w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 text-sm'>
 								{isRefreshing
 									? 'Refreshing...'
 									: 'Refresh Token'}
 							</button>
 							<button
 								onClick={handleLogout}
-								className='px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700'>
+								className='w-full sm:w-auto px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm'>
 								Logout
 							</button>
 						</div>
@@ -127,11 +127,11 @@ export default function TokenInfo() {
 					)}
 
 					{/* User Information */}
-					<div className='bg-gray-700 rounded-lg p-4 mb-6'>
-						<h2 className='text-xl font-semibold text-white mb-4'>
+					<div className='bg-gray-700 rounded-lg p-4 mb-4 sm:mb-6'>
+						<h2 className='text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4'>
 							User Information
 						</h2>
-						<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+						<div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm'>
 							<div>
 								<p className='text-gray-400'>ID</p>
 								<p className='text-white font-mono'>
@@ -157,12 +157,12 @@ export default function TokenInfo() {
 					{tokenInfo && (
 						<div className='space-y-6'>
 							<div className='bg-gray-700 rounded-lg p-4'>
-								<div className='flex items-center justify-between mb-4'>
-									<h2 className='text-xl font-semibold text-white'>
+								<div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3 sm:mb-4'>
+									<h2 className='text-lg sm:text-xl font-semibold text-white'>
 										Token Status
 									</h2>
 									<span
-										className={`px-3 py-1 rounded-full text-sm font-medium ${
+										className={`px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${
 											tokenInfo.isExpired
 												? 'bg-red-900 text-red-200'
 												: 'bg-green-900 text-green-200'
@@ -172,7 +172,7 @@ export default function TokenInfo() {
 											: 'Valid'}
 									</span>
 								</div>
-								<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+								<div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm'>
 									<div>
 										<p className='text-gray-400'>
 											Expires At
@@ -192,29 +192,29 @@ export default function TokenInfo() {
 								</div>
 							</div>
 
-							<div className='bg-gray-700 rounded-lg p-4'>
-								<h2 className='text-xl font-semibold text-white mb-4'>
+							<div className='bg-gray-700 rounded-lg p-3 sm:p-4'>
+								<h2 className='text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4'>
 									Token Payload
 								</h2>
-								<pre className='bg-gray-800 p-4 rounded-md overflow-x-auto text-sm text-green-400'>
+								<pre className='bg-gray-800 p-3 sm:p-4 rounded-md overflow-x-auto text-xs sm:text-sm text-green-400'>
 									{JSON.stringify(tokenInfo.payload, null, 2)}
 								</pre>
 							</div>
 
-							<div className='bg-gray-700 rounded-lg p-4'>
-								<h2 className='text-xl font-semibold text-white mb-4'>
+							<div className='bg-gray-700 rounded-lg p-3 sm:p-4'>
+								<h2 className='text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4'>
 									Token Header
 								</h2>
-								<pre className='bg-gray-800 p-4 rounded-md overflow-x-auto text-sm text-blue-400'>
+								<pre className='bg-gray-800 p-3 sm:p-4 rounded-md overflow-x-auto text-xs sm:text-sm text-blue-400'>
 									{JSON.stringify(tokenInfo.header, null, 2)}
 								</pre>
 							</div>
 
-							<div className='bg-gray-700 rounded-lg p-4'>
-								<h2 className='text-xl font-semibold text-white mb-4'>
+							<div className='bg-gray-700 rounded-lg p-3 sm:p-4'>
+								<h2 className='text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4'>
 									Token Signature
 								</h2>
-								<pre className='bg-gray-800 p-4 rounded-md overflow-x-auto text-sm text-yellow-400 break-all'>
+								<pre className='bg-gray-800 p-3 sm:p-4 rounded-md overflow-x-auto text-xs sm:text-sm text-yellow-400 break-all'>
 									{tokenInfo.signature}
 								</pre>
 							</div>

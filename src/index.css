@@ -8,10 +8,22 @@ body {
 	font-family: "Inter", system-ui, sans-serif;
 	margin: 0;
 	padding: 0;
+	background-color: #111827; /* gray-900 */
+	overflow-x: hidden;
+	width: 100%;
+	min-height: 100vh;
+}
+
+html {
+	background-color: #111827; /* gray-900 */
+	overflow-x: hidden;
+	width: 100%;
 }
 
 #root {
 	min-height: 100vh;
+	background-color: #111827; /* gray-900 */
+	width: 100%;
 }
 
 /* Custom scrollbar styles */

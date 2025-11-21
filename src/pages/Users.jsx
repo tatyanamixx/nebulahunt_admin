@@ -200,21 +200,21 @@ export default function Users() {
 	}
 
 	return (
-		<div className='space-y-6'>
+		<div className='space-y-4 sm:space-y-6'>
 			{/* Header */}
-			<div className='flex items-center justify-between'>
+			<div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
 				<div>
-					<h1 className='text-2xl font-bold text-white'>
+					<h1 className='text-xl sm:text-2xl font-bold text-white'>
 						User Manager
 					</h1>
-					<p className='text-gray-400'>
+					<p className='text-xs sm:text-sm text-gray-400'>
 						Manage game users and their accounts
 					</p>
 				</div>
 				<button
 					onClick={fetchUsers}
 					disabled={loading}
-					className='inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors disabled:opacity-50'>
+					className='inline-flex items-center justify-center px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors disabled:opacity-50 text-sm'>
 					<RefreshCw
 						className={`h-4 w-4 mr-2 ${
 							loading ? 'animate-spin' : ''
@@ -237,7 +237,7 @@ export default function Users() {
 			)}
 
 			{/* Search */}
-			<div className='bg-gray-800 rounded-lg p-4'>
+			<div className='bg-gray-800 rounded-lg p-3 sm:p-4'>
 				<div className='relative'>
 					<Search className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400' />
 					<input
@@ -245,7 +245,7 @@ export default function Users() {
 						placeholder='Search users...'
 						value={searchTerm}
 						onChange={(e) => setSearchTerm(e.target.value)}
-						className='w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500'
+						className='w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm'
 					/>
 				</div>
 			</div>
@@ -270,13 +270,13 @@ export default function Users() {
 						{filteredUsers.map((user) => (
 							<div
 								key={user.id}
-								className='p-6 hover:bg-gray-750 transition-colors'>
-								<div className='flex items-center justify-between'>
+								className='p-4 sm:p-6 hover:bg-gray-750 transition-colors'>
+								<div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
 									{/* User Info */}
-									<div className='flex-1'>
-										<div className='flex items-center space-x-3 mb-2'>
-											<div className='flex items-center space-x-2'>
-												<h3 className='text-lg font-medium text-white'>
+									<div className='flex-1 min-w-0'>
+										<div className='flex flex-wrap items-center gap-2 sm:gap-3 mb-2'>
+											<div className='flex flex-wrap items-center gap-2'>
+												<h3 className='text-base sm:text-lg font-medium text-white break-words'>
 													{user.username ||
 														'Unknown User'}
 												</h3>
@@ -297,7 +297,7 @@ export default function Users() {
 										</div>
 
 										{/* User Details */}
-										<div className='grid grid-cols-1 md:grid-cols-2 gap-4 text-sm'>
+										<div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm'>
 											<div className='space-y-2'>
 												<div className='flex items-center text-gray-400'>
 													<Hash className='h-4 w-4 mr-2 flex-shrink-0' />
@@ -390,7 +390,7 @@ export default function Users() {
 									</div>
 
 									{/* Actions */}
-									<div className='flex items-center space-x-2 ml-4'>
+									<div className='flex items-center justify-start sm:justify-end space-x-2 sm:ml-4'>
 										<button
 											onClick={() =>
 												toggleUserBlock(
@@ -398,7 +398,7 @@ export default function Users() {
 													user.blocked
 												)
 											}
-											className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+											className={`inline-flex items-center px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-colors ${
 												user.blocked
 													? 'bg-green-600 hover:bg-green-700 text-white'
 													: 'bg-red-600 hover:bg-red-700 text-white'

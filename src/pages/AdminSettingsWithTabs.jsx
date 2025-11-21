@@ -121,8 +121,8 @@ export default function AdminSettingsWithTabs() {
 	];
 
 	return (
-		<div className="min-h-screen bg-gray-900 text-white p-6">
-			<div className="max-w-4xl mx-auto space-y-6">
+		<div className="min-h-screen bg-gray-900 text-white p-4 sm:p-6">
+			<div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
 				{/* Header */}
 				<div className="bg-gray-800 shadow rounded-lg border border-gray-700 p-6">
 					<h1 className="text-2xl font-bold text-white mb-2">
@@ -149,21 +149,26 @@ export default function AdminSettingsWithTabs() {
 
 				{/* Tabs Navigation */}
 				<div className="bg-gray-800 shadow rounded-lg border border-gray-700">
-					<div className="border-b border-gray-700">
-						<nav className="flex space-x-8 px-6" aria-label="Tabs">
+					<div className="border-b border-gray-700 overflow-x-auto">
+						<nav 
+							className="flex space-x-4 sm:space-x-8 px-4 sm:px-6 overflow-x-auto scrollbar-hide" 
+							aria-label="Tabs"
+							style={{ WebkitOverflowScrolling: 'touch' }}
+						>
 							{tabs.map((tab) => (
 								<button
 									key={tab.id}
 									onClick={() => setActiveTab(tab.id)}
 									className={cn(
-										"py-4 px-1 border-b-2 font-medium text-sm transition-colors",
+										"py-4 px-2 sm:px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex-shrink-0",
 										activeTab === tab.id
 											? "border-blue-500 text-blue-400"
 											: "border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300"
 									)}
 								>
 									<span className="mr-2">{tab.icon}</span>
-									{tab.label}
+									<span className="hidden sm:inline">{tab.label}</span>
+									<span className="sm:hidden">{tab.label.split(' ')[0]}</span>
 								</button>
 							))}
 						</nav>

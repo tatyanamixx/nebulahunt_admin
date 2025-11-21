@@ -89,41 +89,43 @@ export default function GameSettings() {
 	}
 
 	return (
-		<div className="space-y-6">
+		<div className="space-y-4 sm:space-y-6">
 			{/* Header */}
-			<div className="flex items-center justify-between">
+			<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 				<div>
-					<h1 className="text-2xl font-bold text-white">Game Settings</h1>
-					<p className="text-gray-400">
+					<h1 className="text-xl sm:text-2xl font-bold text-white">Game Settings</h1>
+					<p className="text-xs sm:text-sm text-gray-400">
 						Configure game templates and settings
 					</p>
 				</div>
 				<div className="flex items-center space-x-2 text-gray-400">
-					<Gamepad2 className="h-5 w-5" />
-					<span className="text-sm">Template Management</span>
+					<Gamepad2 className="h-4 w-4 sm:h-5 sm:w-5" />
+					<span className="text-xs sm:text-sm">Template Management</span>
 				</div>
 			</div>
 
 			{/* Tabs */}
 			<div className="bg-gray-800 rounded-lg">
-				<div className="border-b border-gray-700">
+				<div className="border-b border-gray-700 overflow-x-auto">
 					<nav
-						className="flex space-x-4 px-6 overflow-x-auto scrollbar-hide"
+						className="flex space-x-2 sm:space-x-4 px-4 sm:px-6 overflow-x-auto scrollbar-hide"
 						aria-label="Tabs"
+						style={{ WebkitOverflowScrolling: 'touch' }}
 					>
 						{tabs.map((tab) => (
 							<button
 								key={tab.id}
 								onClick={() => setActiveTab(tab.id)}
-								className={`py-3 px-2 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
+								className={`py-3 px-2 sm:px-3 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap flex-shrink-0 ${
 									activeTab === tab.id
 										? "border-blue-500 text-blue-400"
 										: "border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300"
 								}`}
 							>
-								<div className="flex items-center space-x-2">
-									<span className="text-lg">{tab.icon}</span>
-									<span>{tab.label}</span>
+								<div className="flex items-center space-x-1 sm:space-x-2">
+									<span className="text-base sm:text-lg">{tab.icon}</span>
+									<span className="hidden sm:inline">{tab.label}</span>
+									<span className="sm:hidden">{tab.label.split(' ')[0]}</span>
 								</div>
 							</button>
 						))}
@@ -131,20 +133,20 @@ export default function GameSettings() {
 				</div>
 
 				{/* Tab Content */}
-				<div className="p-6">
+				<div className="p-4 sm:p-6">
 					{/* Tab Description */}
-					<div className="mb-6">
-						<h2 className="text-xl font-semibold text-white mb-2">
+					<div className="mb-4 sm:mb-6">
+						<h2 className="text-lg sm:text-xl font-semibold text-white mb-2">
 							{tabs.find((tab) => tab.id === activeTab)?.label}{" "}
 							Templates
 						</h2>
-						<p className="text-gray-400">
+						<p className="text-sm sm:text-base text-gray-400">
 							{tabs.find((tab) => tab.id === activeTab)?.description}
 						</p>
 					</div>
 
 					{/* Tab Components */}
-					<div className="min-h-[400px]">
+					<div className="min-h-[300px] sm:min-h-[400px]">
 						{activeTab === "artifacts" && <ArtifactTemplatesTab />}
 
 						{activeTab === "events" && <EventTemplatesTab />}

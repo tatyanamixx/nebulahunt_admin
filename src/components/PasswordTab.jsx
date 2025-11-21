@@ -83,14 +83,14 @@ export function PasswordTab({
 	};
 
 	return (
-		<div className="space-y-6">
+		<div className="space-y-4 sm:space-y-6">
 			{/* Password Info */}
 			{passwordInfo && (
-				<div className="bg-gray-700 p-4 rounded-lg border border-gray-600">
-					<h4 className="text-sm font-medium text-gray-200 mb-3">
+				<div className="bg-gray-700 p-3 sm:p-4 rounded-lg border border-gray-600">
+					<h4 className="text-xs sm:text-sm font-medium text-gray-200 mb-2 sm:mb-3">
 						Password Information
 					</h4>
-					<div className="space-y-2 text-sm">
+					<div className="space-y-2 text-xs sm:text-sm">
 						<p className="text-gray-300">
 							<strong>Password set:</strong>{" "}
 							{passwordInfo.hasPassword ? "✅ Yes" : "❌ No"}
@@ -136,8 +136,8 @@ export function PasswordTab({
 			)}
 
 			{/* Password Change Section */}
-			<div className="bg-gray-700 shadow rounded-lg border border-gray-600 p-6">
-				<h2 className="text-lg font-medium text-white mb-4">
+			<div className="bg-gray-700 shadow rounded-lg border border-gray-600 p-4 sm:p-6">
+				<h2 className="text-base sm:text-lg font-medium text-white mb-3 sm:mb-4">
 					🔑 Password Management
 				</h2>
 
@@ -152,9 +152,9 @@ export function PasswordTab({
 
 			{/* Password Change Form */}
 			{showPasswordChange && (
-				<div className="space-y-6">
-					<div className="bg-gray-700 p-6 rounded-lg border border-gray-600">
-						<h3 className="text-lg font-medium text-white mb-4">
+				<div className="space-y-4 sm:space-y-6">
+					<div className="bg-gray-700 p-4 sm:p-6 rounded-lg border border-gray-600">
+						<h3 className="text-base sm:text-lg font-medium text-white mb-3 sm:mb-4">
 							🔑 Change Password
 						</h3>
 						<form onSubmit={handlePasswordChange} className="space-y-4">
@@ -373,7 +373,7 @@ export function PasswordTab({
 								)}
 							</div>
 
-							<div className="flex space-x-3">
+							<div className="flex flex-col sm:flex-row gap-2 sm:space-x-3">
 								<button
 									type="submit"
 									disabled={
@@ -384,7 +384,7 @@ export function PasswordTab({
 										passwordMismatch ||
 										hasCyrillic
 									}
-									className="flex-1 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+									className="flex-1 py-2 px-4 border border-transparent rounded-md shadow-sm text-xs sm:text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
 								>
 									{loading ? (
 										<div className="flex items-center justify-center">

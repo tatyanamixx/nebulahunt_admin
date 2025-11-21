@@ -126,20 +126,20 @@ export function InvitationsTab({
 	};
 
 	return (
-		<div className="space-y-6">
+		<div className="space-y-4 sm:space-y-6">
 			{/* Header */}
-			<div className="flex items-center justify-between">
+			<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 				<div>
-					<h3 className="text-lg font-medium text-white">
+					<h3 className="text-base sm:text-lg font-medium text-white">
 						Admin Invitations
 					</h3>
-					<p className="text-sm text-gray-400">
+					<p className="text-xs sm:text-sm text-gray-400">
 						Manage invitations for new administrators and supervisors
 					</p>
 				</div>
 				<button
 					onClick={() => setShowInviteForm(!showInviteForm)}
-					className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+					className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-medium rounded-lg transition-colors"
 				>
 					<Plus className="h-4 w-4 mr-2" />
 					{showInviteForm ? "Cancel" : "Send Invite"}
@@ -148,12 +148,12 @@ export function InvitationsTab({
 
 			{/* Invite Form */}
 			{showInviteForm && (
-				<div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
-					<h4 className="text-md font-medium text-white mb-4">
+				<div className="bg-gray-800 border border-gray-700 rounded-lg p-4 sm:p-6">
+					<h4 className="text-sm sm:text-md font-medium text-white mb-3 sm:mb-4">
 						Send New Invitation
 					</h4>
-					<form onSubmit={handleSendInvite} className="space-y-4">
-						<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+					<form onSubmit={handleSendInvite} className="space-y-3 sm:space-y-4">
+						<div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
 							<div>
 								<label
 									htmlFor="inviteEmail"
@@ -206,18 +206,18 @@ export function InvitationsTab({
 								<option value="SUPERVISOR">Supervisor</option>
 							</select>
 						</div>
-						<div className="flex items-center justify-end space-x-3">
+						<div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:space-x-3">
 							<button
 								type="button"
 								onClick={() => setShowInviteForm(false)}
-								className="px-4 py-2 text-gray-300 hover:text-white transition-colors"
+								className="w-full sm:w-auto px-4 py-2 text-gray-300 hover:text-white transition-colors text-sm"
 							>
 								Cancel
 							</button>
 							<button
 								type="submit"
 								disabled={isSubmitting || loading}
-								className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors"
+								className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white text-xs sm:text-sm font-medium rounded-lg transition-colors"
 							>
 								{isSubmitting ? (
 									<>
@@ -238,34 +238,34 @@ export function InvitationsTab({
 
 			{/* Invites List */}
 			<div className="bg-gray-800 border border-gray-700 rounded-lg">
-				<div className="px-6 py-4 border-b border-gray-700">
-					<h4 className="text-md font-medium text-white">
+				<div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-700">
+					<h4 className="text-sm sm:text-md font-medium text-white">
 						Invitations ({invites.length})
 					</h4>
 				</div>
 				<div className="divide-y divide-gray-700">
 					{loading ? (
-						<div className="p-6 text-center">
+						<div className="p-4 sm:p-6 text-center">
 							<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-							<p className="text-gray-400 mt-2">
+							<p className="text-gray-400 mt-2 text-sm">
 								Loading invitations...
 							</p>
 						</div>
 					) : invites.length === 0 ? (
-						<div className="p-6 text-center">
-							<UserPlus className="h-12 w-12 text-gray-500 mx-auto mb-4" />
-							<p className="text-gray-400">No invitations found</p>
-							<p className="text-sm text-gray-500 mt-1">
+						<div className="p-4 sm:p-6 text-center">
+							<UserPlus className="h-10 w-10 sm:h-12 sm:w-12 text-gray-500 mx-auto mb-3 sm:mb-4" />
+							<p className="text-gray-400 text-sm">No invitations found</p>
+							<p className="text-xs sm:text-sm text-gray-500 mt-1">
 								Send your first invitation to get started
 							</p>
 						</div>
 					) : (
 						invites.map((invite) => (
-							<div key={invite.id} className="p-6">
-								<div className="flex items-center justify-between">
-									<div className="flex-1">
-										<div className="flex items-center space-x-3 mb-2">
-											<h5 className="text-white font-medium">
+							<div key={invite.id} className="p-4 sm:p-6">
+								<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+									<div className="flex-1 min-w-0">
+										<div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
+											<h5 className="text-sm sm:text-base text-white font-medium break-words">
 												{invite.name}
 											</h5>
 											<span
@@ -286,10 +286,10 @@ export function InvitationsTab({
 												</span>
 											</span>
 										</div>
-										<p className="text-gray-400 text-sm mb-1">
+										<p className="text-gray-400 text-xs sm:text-sm mb-1 break-words">
 											{invite.email}
 										</p>
-										<div className="flex items-center space-x-4 text-xs text-gray-500">
+										<div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:space-x-4 text-xs text-gray-500">
 											<span>
 												Created:{" "}
 												{formatDate(invite.createdAt)}

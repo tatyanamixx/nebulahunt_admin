@@ -45,7 +45,7 @@ export default function Layout() {
 	// Отладочная информация отключена для тестирования
 
 	return (
-		<div className="min-h-screen bg-gray-900">
+		<div className="min-h-screen bg-gray-900 overflow-x-hidden">
 			{/* Mobile sidebar */}
 			<div
 				className={cn(
@@ -159,8 +159,8 @@ export default function Layout() {
 				</div>
 
 				{/* Page content */}
-				<main className="py-6 bg-gray-900">
-					<div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+				<main className="py-6 bg-gray-900 min-h-screen overflow-x-hidden">
+					<div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full">
 						<Outlet />
 					</div>
 				</main>

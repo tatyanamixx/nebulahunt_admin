@@ -165,29 +165,31 @@ export default function Settings() {
 				)}
 
 				{/* Tabs */}
-				<div className='mb-6 border-b border-gray-700'>
-					<nav className='-mb-px flex space-x-8'>
+				<div className='mb-4 sm:mb-6 border-b border-gray-700 overflow-x-auto'>
+					<nav className='-mb-px flex space-x-4 sm:space-x-8 overflow-x-auto scrollbar-hide' style={{ WebkitOverflowScrolling: 'touch' }}>
 						<button
 							onClick={() => setActiveTab('game')}
 							className={cn(
-								'py-2 px-1 border-b-2 font-medium text-sm',
+								'py-2 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap flex-shrink-0',
 								activeTab === 'game'
 									? 'border-blue-500 text-blue-400'
 									: 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
 							)}>
-							🎮 Настройки игры
+							<span className="hidden sm:inline">🎮 Настройки игры</span>
+							<span className="sm:hidden">🎮 Игра</span>
 						</button>
 
 						{user?.role === 'SUPERVISOR' && (
 							<button
 								onClick={() => setActiveTab('force-password')}
 								className={cn(
-									'py-2 px-1 border-b-2 font-medium text-sm',
+									'py-2 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap flex-shrink-0',
 									activeTab === 'force-password'
 										? 'border-blue-500 text-blue-400'
 										: 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
 								)}>
-								🔧 Принудительная смена
+								<span className="hidden sm:inline">🔧 Принудительная смена</span>
+								<span className="sm:hidden">🔧 Смена</span>
 							</button>
 						)}
 					</nav>
@@ -197,15 +199,15 @@ export default function Settings() {
 				{activeTab === 'game' && (
 					<>
 						<div className='bg-gray-800 shadow rounded-lg border border-gray-700'>
-							<div className='px-4 py-5 sm:p-6'>
-								<div className='space-y-6'>
+							<div className='px-4 py-4 sm:py-5 sm:p-6'>
+								<div className='space-y-4 sm:space-y-6'>
 									{settingFields.map((field) => (
 										<div
 											key={field.key}
-											className='flex items-start space-x-4'>
+											className='flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4'>
 											<div className='flex-shrink-0'>
 												<div className='inline-flex items-center justify-center p-2 rounded-md bg-blue-100 text-blue-600'>
-													<span className='text-lg'>
+													<span className='text-base sm:text-lg'>
 														{field.icon}
 													</span>
 												</div>
@@ -213,10 +215,10 @@ export default function Settings() {
 											<div className='flex-1 min-w-0'>
 												<label
 													htmlFor={field.key}
-													className='block text-sm font-medium text-gray-300'>
+													className='block text-xs sm:text-sm font-medium text-gray-300'>
 													{field.label}
 												</label>
-												<p className='text-sm text-gray-400'>
+												<p className='text-xs sm:text-sm text-gray-400 mt-1'>
 													{field.description}
 												</p>
 												<div className='mt-2'>
@@ -248,7 +250,7 @@ export default function Settings() {
 														min={field.min}
 														max={field.max}
 														step={field.step}
-														className='block w-full border-gray-600 bg-gray-700 text-white rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm'
+														className='block w-full border-gray-600 bg-gray-700 text-white rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm'
 													/>
 												</div>
 											</div>
@@ -256,7 +258,7 @@ export default function Settings() {
 									))}
 								</div>
 
-								<div className='mt-8 flex justify-end space-x-3'>
+								<div className='mt-6 sm:mt-8 flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 sm:space-x-3'>
 									<button
 										onClick={handleReset}
 										className='px-4 py-2 border border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-300 bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-gray-800'>

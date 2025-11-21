@@ -253,7 +253,10 @@ export default function Transactions() {
 												)}
 											</td>
 											<td className="py-2 px-4 text-gray-300 text-sm text-right">
-												{tx.priceOrAmount.toLocaleString()}
+												{/* Показываем положительную сумму, если пользователь получает ресурсы */}
+												{isSystemAccount(tx.fromAccount) && !isSystemAccount(tx.toAccount)
+													? Math.abs(parseFloat(tx.priceOrAmount)).toLocaleString()
+													: tx.priceOrAmount.toLocaleString()}
 											</td>
 											<td className="py-2 px-4 text-gray-300 text-sm">
 												{tx.currencyOrResource}

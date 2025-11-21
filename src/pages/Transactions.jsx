@@ -253,10 +253,23 @@ export default function Transactions() {
 												)}
 											</td>
 											<td className="py-2 px-4 text-gray-300 text-sm text-right">
-												{/* Показываем положительную сумму, если пользователь получает ресурсы */}
-												{isSystemAccount(tx.fromAccount) && !isSystemAccount(tx.toAccount)
-													? Math.abs(parseFloat(tx.priceOrAmount)).toLocaleString()
-													: tx.priceOrAmount.toLocaleString()}
+												{/* Показываем положительную сумму для транзакций от системы к пользователю */}
+												{(() => {
+													const amount = parseFloat(tx.priceOrAmount);
+													const fromSystem = isSystemAccount(tx.fromAccount);
+													const toUser = !isSystemAccount(tx.toAccount);
+													
+													// Если транзакция от системы к пользователю - показываем положительную сумму
+													if (fromSystem && toUser) {
+														return Math.abs(amount).toLocaleString();
+													}
+													// Если транзакция от пользователя к системе - показываем отрицательную
+													if (!fromSystem && isSystemAccount(tx.toAccount)) {
+														return `-${Math.abs(amount).toLocaleString()}`;
+													}
+													// Остальные случаи - показываем как есть
+													return amount.toLocaleString();
+												})()}
 											</td>
 											<td className="py-2 px-4 text-gray-300 text-sm">
 												{tx.currencyOrResource}

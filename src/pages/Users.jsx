@@ -318,12 +318,17 @@ export default function Users() {
 														</span>
 													</div>
 												)}
-												{user.referral && (
-													<div className='flex items-center text-gray-400'>
-														<UsersIcon className='h-4 w-4 mr-2 flex-shrink-0' />
+												<div className='flex items-center text-gray-400'>
+													<UsersIcon className='h-4 w-4 mr-2 flex-shrink-0' />
+													<span>
+														Referrals:{' '}
+														{user.referralsCount || 0}
+													</span>
+												</div>
+												{user.referral && user.referral !== 0 && (
+													<div className='flex items-center text-gray-400 text-xs'>
 														<span>
-															Referral:{' '}
-															{user.referral}
+															Invited by: {user.referral}
 														</span>
 													</div>
 												)}

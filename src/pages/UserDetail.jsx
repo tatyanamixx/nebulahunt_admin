@@ -199,7 +199,7 @@ export default function UserDetail() {
 		);
 	}
 
-	const { user, galaxies, totalStarsFromGalaxies, leaderboardPosition } =
+	const { user, galaxies, totalStarsFromGalaxies, leaderboardPosition, referralsCount } =
 		userDetails;
 	const userState = user.userState || {};
 
@@ -274,10 +274,15 @@ export default function UserDetail() {
 								</span>
 							</div>
 						)}
-						{user.referral && (
-							<div className="flex items-center text-gray-400">
-								<Users className="h-4 w-4 mr-2" />
-								<span>Referral: {user.referral}</span>
+						<div className="flex items-center text-gray-400">
+							<Users className="h-4 w-4 mr-2" />
+							<span>
+								Referrals: {userDetails.referralsCount || 0}
+							</span>
+						</div>
+						{user.referral && user.referral !== 0 && (
+							<div className="flex items-center text-gray-400 text-xs">
+								<span>Invited by: {user.referral}</span>
 							</div>
 						)}
 						<div className="flex items-center text-gray-400">

@@ -11,7 +11,7 @@ export default function Dashboard() {
 
 	// Custom notification state
 	const [customMessage, setCustomMessage] = useState("");
-	const [photoUrl, setPhotoUrl] = useState("");
+	const [photoFile, setPhotoFile] = useState(null);
 	const [showOpenGameButton, setShowOpenGameButton] = useState(false);
 	const [showCommunityButton, setShowCommunityButton] = useState(false);
 	const [sendingCustom, setSendingCustom] = useState(false);
@@ -95,13 +95,24 @@ export default function Dashboard() {
 		try {
 			setSendingCustom(true);
 			setCustomMessageResult(null);
-			const response = await api.post("/admin/reminders/send-custom", {
-				message: customMessage.trim(),
-				userIds: null, // null = send to all users
-				showOpenGameButton,
-				showCommunityButton,
-				photoUrl: photoUrl.trim() || null,
-			});
+
+			// Use FormData if file is present, otherwise JSON
+			const formData = new FormData();
+			formData.append("message", customMessage.trim());
+			formData.append("userIds", JSON.stringify(null)); // null = send to all users
+			formData.append("showOpenGameButton", showOpenGameButton);
+			formData.append("showCommunityButton", showCommunityButton);
+			if (photoFile) {
+				formData.append("photo", photoFile);
+			}
+
+			const response = await api.post(
+				"/admin/reminders/send-custom",
+				formData,
+				{
+					// Don't set Content-Type - let browser set it with boundary
+				}
+			);
 
 			setCustomMessageResult({
 				type: "success",
@@ -114,7 +125,7 @@ export default function Dashboard() {
 
 			// Clear form
 			setCustomMessage("");
-			setPhotoUrl("");
+			setPhotoFile(null);
 			setShowOpenGameButton(false);
 			setShowCommunityButton(false);
 		} catch (error) {
@@ -255,20 +266,26 @@ export default function Dashboard() {
 					</p>
 				</div>
 
-				{/* Photo URL */}
+				{/* Photo File */}
 				<div className="mb-4">
 					<label className="block text-sm font-medium text-gray-300 mb-2">
-						Photo URL (optional)
+						Photo (optional)
 					</label>
 					<input
-						type="url"
-						value={photoUrl}
-						onChange={(e) => setPhotoUrl(e.target.value)}
-						placeholder="https://example.com/image.jpg"
-						className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+						type="file"
+						accept="image/*"
+						onChange={(e) => setPhotoFile(e.target.files[0] || null)}
+						className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
 					/>
+					{photoFile && (
+						<p className="text-xs text-green-400 mt-1">
+							✅ Selected: {photoFile.name} (
+							{(photoFile.size / 1024).toFixed(1)} KB)
+						</p>
+					)}
 					<p className="text-xs text-gray-400 mt-1">
-						💡 Enter a direct URL to an image (JPG, PNG, etc.)
+						💡 Select an image file (JPG, PNG, etc.) to attach to the
+						message
 					</p>
 				</div>
 

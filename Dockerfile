@@ -25,6 +25,10 @@ RUN echo 'server { \
     server_name _; \
     root /usr/share/nginx/html; \
     index index.html; \
+    \
+    # Увеличиваем лимит размера тела запроса для загрузки файлов (фото для уведомлений) \
+    client_max_body_size 20M; \
+    \
     location / { \
         try_files $uri $uri/ /index.html; \
     } \
@@ -35,6 +39,9 @@ RUN echo 'server { \
         proxy_set_header X-Real-IP $remote_addr; \
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \
         proxy_set_header X-Forwarded-Proto $scheme; \
+        \
+        # Увеличиваем лимит для проксируемых запросов \
+        client_max_body_size 20M; \
     } \
 }' > /etc/nginx/conf.d/default.conf
 

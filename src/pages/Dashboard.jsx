@@ -11,6 +11,7 @@ export default function Dashboard() {
 
 	// Custom notification state
 	const [customMessage, setCustomMessage] = useState("");
+	const [photoUrl, setPhotoUrl] = useState("");
 	const [showOpenGameButton, setShowOpenGameButton] = useState(false);
 	const [showCommunityButton, setShowCommunityButton] = useState(false);
 	const [sendingCustom, setSendingCustom] = useState(false);
@@ -99,6 +100,7 @@ export default function Dashboard() {
 				userIds: null, // null = send to all users
 				showOpenGameButton,
 				showCommunityButton,
+				photoUrl: photoUrl.trim() || null,
 			});
 
 			setCustomMessageResult({
@@ -112,6 +114,7 @@ export default function Dashboard() {
 
 			// Clear form
 			setCustomMessage("");
+			setPhotoUrl("");
 			setShowOpenGameButton(false);
 			setShowCommunityButton(false);
 		} catch (error) {
@@ -249,6 +252,23 @@ export default function Dashboard() {
 					<p className="text-xs text-gray-400 mt-1">
 						💡 Just write your text with line breaks and emojis - no HTML
 						needed!
+					</p>
+				</div>
+
+				{/* Photo URL */}
+				<div className="mb-4">
+					<label className="block text-sm font-medium text-gray-300 mb-2">
+						Photo URL (optional)
+					</label>
+					<input
+						type="url"
+						value={photoUrl}
+						onChange={(e) => setPhotoUrl(e.target.value)}
+						placeholder="https://example.com/image.jpg"
+						className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+					/>
+					<p className="text-xs text-gray-400 mt-1">
+						💡 Enter a direct URL to an image (JPG, PNG, etc.)
 					</p>
 				</div>
 

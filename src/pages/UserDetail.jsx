@@ -356,7 +356,6 @@ export default function UserDetail() {
 								className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
 								<option value="stardust">Stardust</option>
 								<option value="darkMatter">Dark Matter</option>
-								<option value="stars">Stars</option>
 							</select>
 						</div>
 						<div>
@@ -524,8 +523,26 @@ export default function UserDetail() {
 													: tx.toAccount}
 											</td>
 											<td className="py-2 px-4 text-gray-300 text-sm text-right">
-												{tx.toAccount === parseInt(userId) ? '+' : '-'}
-												{tx.priceOrAmount.toLocaleString()}
+												{(() => {
+													const rawAmount = parseFloat(tx.priceOrAmount);
+													const fromSystem = tx.fromAccount === 1000000000000000 || tx.fromAccount === '1000000000000000';
+													const toUser = tx.toAccount === parseInt(userId) || tx.toAccount === userId;
+													const fromUser = tx.fromAccount === parseInt(userId) || tx.fromAccount === userId;
+													const toSystem = tx.toAccount === 1000000000000000 || tx.toAccount === '1000000000000000';
+													
+													// Если транзакция от системы к пользователю - показываем положительную сумму
+													if (fromSystem && toUser) {
+														return `+${Math.abs(rawAmount).toLocaleString()}`;
+													}
+													// Если транзакция от пользователя к системе - показываем отрицательную
+													if (fromUser && toSystem) {
+														return `-${Math.abs(rawAmount).toLocaleString()}`;
+													}
+													// Остальные случаи - показываем абсолютное значение с соответствующим знаком
+													return rawAmount >= 0 
+														? `+${Math.abs(rawAmount).toLocaleString()}`
+														: `-${Math.abs(rawAmount).toLocaleString()}`;
+												})()}
 											</td>
 											<td className="py-2 px-4 text-gray-300 text-sm">
 												{tx.currencyOrResource}

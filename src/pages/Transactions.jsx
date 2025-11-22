@@ -77,7 +77,12 @@ export default function Transactions() {
 			DAILY_REWARD: 'Daily Reward',
 			FARMING_REWARD: 'Farming Reward',
 			GALAXY_RESOURCE: 'Galaxy Resource',
+			GALAXY_CAPTURE: 'Galaxy Capture', // ✅ Захват галактики
+			GALAXY_UPGRADE: 'Galaxy Upgrade', // ✅ Улучшение галактики
 			PACKAGE_REWARD: 'Package Reward',
+			PACKAGE_PURCHASE: 'Package Purchase', // ✅ Покупка пакета
+			STARDUST_PURCHASE: 'Stardust Purchase', // ✅ Покупка звездной пыли
+			DARK_MATTER_PURCHASE: 'Dark Matter Purchase', // ✅ Покупка черной материи
 			REFERRER_REWARD: 'Referrer Reward',
 			REFEREE_REWARD: 'Referee Reward',
 			REGISTRATION_BONUS: 'Registration Bonus',

@@ -379,7 +379,7 @@ export default function UserDetail() {
 					Give Currency
 				</h2>
 				<form onSubmit={handleGiveCurrency} className="space-y-4">
-					<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+					<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 						<div>
 							<label className="block text-sm font-medium text-gray-300 mb-2">
 								Currency
@@ -414,23 +414,6 @@ export default function UserDetail() {
 								min="1"
 								step="1"
 								required
-								className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-							/>
-						</div>
-						<div>
-							<label className="block text-sm font-medium text-gray-300 mb-2">
-								Reason (optional)
-							</label>
-							<input
-								type="text"
-								value={currencyForm.reason}
-								onChange={(e) =>
-									setCurrencyForm({
-										...currencyForm,
-										reason: e.target.value,
-									})
-								}
-								placeholder="Admin grant"
 								className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
 							/>
 						</div>

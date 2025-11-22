@@ -325,7 +325,7 @@ export default function UserDetail() {
 			{/* Resources Card */}
 			<div className="bg-gray-800 rounded-lg p-4 sm:p-6">
 				<h2 className="text-lg font-medium text-white mb-4">Resources</h2>
-				<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 					<div className="bg-gray-700 p-4 rounded">
 						<div className="flex items-center text-gray-400 mb-2">
 							<Star className="h-5 w-5 mr-2" />
@@ -357,6 +357,17 @@ export default function UserDetail() {
 						</div>
 						<div className="text-2xl font-bold text-white">
 							{formatNumber(userState.darkMatter || 0)}
+						</div>
+					</div>
+					<div className="bg-gray-700 p-4 rounded">
+						<div className="flex items-center text-gray-400 mb-2">
+							<Coins className="h-5 w-5 mr-2" />
+							<span>Telegram Stars Spent</span>
+						</div>
+						<div className="text-2xl font-bold text-white">
+							{formatNumber(
+								Math.abs(Number(userState.tgStars || 0))
+							)}
 						</div>
 					</div>
 				</div>

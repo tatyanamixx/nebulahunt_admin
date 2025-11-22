@@ -17,6 +17,10 @@ export default function Dashboard() {
 	const [sendingCustom, setSendingCustom] = useState(false);
 	const [customMessageResult, setCustomMessageResult] = useState(null);
 
+	// Test payment mode state
+	const [testPaymentMode, setTestPaymentMode] = useState(false);
+	const [testPaymentModeLoading, setTestPaymentModeLoading] = useState(true);
+
 	// Не показываем компонент, если пользователь не аутентифицирован
 	if (!isAuthenticated) {
 		return null;
@@ -25,7 +29,42 @@ export default function Dashboard() {
 	// Load reminder stats
 	useEffect(() => {
 		loadStats();
+		fetchTestPaymentMode();
 	}, []);
+
+	const fetchTestPaymentMode = async () => {
+		try {
+			const response = await api.get("/admin/test-payment-mode");
+			setTestPaymentMode(response.data.enabled);
+		} catch (error) {
+			console.error("Error loading test payment mode:", error);
+		} finally {
+			setTestPaymentModeLoading(false);
+		}
+	};
+
+	const handleTestPaymentModeToggle = async (enabled) => {
+		try {
+			const response = await api.put("/admin/test-payment-mode", {
+				enabled,
+			});
+			setTestPaymentMode(response.data.enabled);
+			setCustomMessageResult({
+				type: "success",
+				text:
+					response.data.message ||
+					(enabled
+						? "Тестовый режим платежей включен (цена = 1 звезда)"
+						: "Тестовый режим платежей выключен"),
+			});
+		} catch (error) {
+			console.error("Error updating test payment mode:", error);
+			setCustomMessageResult({
+				type: "error",
+				text: "Ошибка при обновлении тестового режима платежей",
+			});
+		}
+	};
 
 	const loadStats = async () => {
 		try {
@@ -333,6 +372,46 @@ export default function Dashboard() {
 					💡 Notification will be sent to ALL users. You can add buttons to
 					the message by checking the boxes above.
 				</p>
+			</div>
+
+			{/* Test Payment Mode Toggle */}
+			<div className="bg-yellow-900/30 border-2 border-yellow-600 shadow-lg rounded-lg p-4 sm:p-6">
+				<div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
+					<div className="flex-shrink-0">
+						<div className="inline-flex items-center justify-center p-3 rounded-md bg-yellow-500 text-yellow-900">
+							<span className="text-2xl sm:text-3xl">🧪</span>
+						</div>
+					</div>
+					<div className="flex-1 min-w-0">
+						<label className="block text-base sm:text-lg font-bold text-yellow-200">
+							🧪 Тестовый режим платежей
+						</label>
+						<p className="text-sm sm:text-base text-yellow-300 mt-2 font-medium">
+							Когда включен, все платежи будут стоить 1 звезду вместо
+							реальной цены. Полезно для тестирования платежной системы.
+						</p>
+						<div className="mt-4">
+							{testPaymentModeLoading ? (
+								<div className="h-6 w-6 animate-spin border-2 border-yellow-400 border-t-transparent rounded-full" />
+							) : (
+								<label className="relative inline-flex items-center cursor-pointer">
+									<input
+										type="checkbox"
+										checked={testPaymentMode}
+										onChange={(e) =>
+											handleTestPaymentModeToggle(e.target.checked)
+										}
+										className="sr-only peer"
+									/>
+									<div className="w-14 h-7 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-yellow-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-yellow-500"></div>
+									<span className="ml-4 text-base font-bold text-yellow-200">
+										{testPaymentMode ? "✅ ВКЛЮЧЕН" : "❌ ВЫКЛЮЧЕН"}
+									</span>
+								</label>
+							)}
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 	);
